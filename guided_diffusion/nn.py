@@ -31,6 +31,9 @@ def conv_nd(dims, *args, **kwargs):
         return nn.Conv3d(*args, **kwargs)
     raise ValueError(f"unsupported dimensions: {dims}")
 
+def layer_norm(shape, *args, **kwargs):
+
+    return nn.LayerNorm(shape, *args, **kwargs)
 
 def linear(*args, **kwargs):
     """

@@ -16,6 +16,7 @@ from skimage.transform import rotate
 class ISICDataset(Dataset):
     def __init__(self, args, data_path , transform = None, transform_seg = None, mode = 'Training',plane = False):
 
+
         df = pd.read_csv(os.path.join(data_path, 'ISBI2016_ISIC_Part3B_' + mode + '_GroundTruth.csv'), encoding='gbk')
         self.name_list = df.iloc[:,0].tolist()
         self.label_list = df.iloc[:,1].tolist()
@@ -49,6 +50,9 @@ class ISICDataset(Dataset):
 
         if self.transform_seg:
             mask = self.transform_seg(mask)
-        img = torch.cat((img,mask),0)
 
-        return (img, mask)
+        if self.mode == 'Training':
+            # img = torch.cat((img,mask),0)
+            return (img, mask)
+        else:
+            return (img, mask, name)

@@ -24,10 +24,14 @@ import torchvision.transforms as transforms
 def main():
     args = create_argparser().parse_args()
 
-    dist_util.setup_dist()
+    dist_util.setup_dist(args)
     logger.configure()
 
     logger.log("creating model and diffusion...")
+
+    # for k,v in th.load("./res-1118/savedmodel030000.pt").items():
+    #     print(k,'\n',v.size())
+
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
@@ -89,6 +93,7 @@ def create_argparser():
         resume_checkpoint='',#'"./results/pretrainedmodel.pt",
         use_fp16=False,
         fp16_scale_growth=1e-3,
+        gpu_dev = "0"
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

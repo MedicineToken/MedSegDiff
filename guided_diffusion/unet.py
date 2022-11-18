@@ -5,6 +5,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
+from .mobile_net import MobileNetV1, MobileNetV2
 from .nn import (
     checkpoint,
     conv_nd,
@@ -13,6 +14,7 @@ from .nn import (
     zero_module,
     normalization,
     timestep_embedding,
+    layer_norm,
 )
 
 
@@ -135,6 +137,62 @@ class Downsample(nn.Module):
     def forward(self, x):
         assert x.shape[1] == self.channels
         return self.op(x)
+
+def conv_bn(inp, oup, stride):
+    return nn.Sequential(
+        nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
+        nn.BatchNorm2d(oup),
+        nn.ReLU(inplace=True)
+        )
+
+def conv_dw(inp, oup, stride):
+    return nn.Sequential(
+        # dw
+        nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
+        nn.BatchNorm2d(inp),
+        nn.ReLU(inplace=True),
+
+        # pw
+        nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+        nn.BatchNorm2d(oup),
+        nn.ReLU(inplace=True),
+    )
+
+class MobBlock(nn.Module):
+    def __init__(self,ind):
+        super().__init__()
+
+
+        if ind == 0:
+            self.stage = nn.Sequential(
+            conv_bn(3, 32, 2),
+            conv_dw(32, 64, 1),
+            conv_dw(64, 128, 1),
+            conv_dw(128, 128, 1)
+        )
+        elif ind == 1:
+            self.stage  = nn.Sequential(
+            conv_dw(128, 256, 2),
+            conv_dw(256, 256, 1)
+        )
+        elif ind == 2:
+            self.stage = nn.Sequential(
+            conv_dw(256, 256, 2),
+            conv_dw(256, 256, 1)
+            )
+        else:
+            self.stage = nn.Sequential(
+                conv_dw(256, 512, 2),
+                conv_dw(512, 512, 1),
+                conv_dw(512, 512, 1),
+                conv_dw(512, 512, 1),
+                conv_dw(512, 512, 1),
+                conv_dw(512, 512, 1)
+            )
+
+    def forward(self,x):
+        return self.stage(x)
+
 
 
 class ResBlock(TimestepBlock):
@@ -393,7 +451,6 @@ class QKVAttention(nn.Module):
 class UNetModel(nn.Module):
     """
     The full UNet model with attention and timestep embedding.
-
     :param in_channels: channels in the input Tensor.
     :param model_channels: base channel count for the model.
     :param out_channels: channels in the output Tensor.
@@ -610,6 +667,12 @@ class UNetModel(nn.Module):
                 self.output_blocks.append(TimestepEmbedSequential(*layers))
                 self._feature_size += ch
 
+        self.cond_blocks = nn.ModuleList()
+        for i in range(4):
+            self.cond_blocks.append(
+                MobBlock(i)
+            )
+
         self.out = nn.Sequential(
             normalization(ch),
             nn.SiLU(),
@@ -631,6 +694,11 @@ class UNetModel(nn.Module):
         self.input_blocks.apply(convert_module_to_f32)
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
+    
+    def enhance(self, c, h):
+        cu = layer_norm(c.size()[1:])(c)
+        hu = layer_norm(h.size()[1:])(h)
+        return cu * hu * h
 
     def forward(self, x, timesteps, y=None):
         """
@@ -653,9 +721,32 @@ class UNetModel(nn.Module):
             emb = emb + self.label_emb(y)
 
         h = x.type(self.dtype)
-        for module in self.input_blocks:
+        # cs = self.mob(h[:,:-1,...])
+        c = h[:,:-1,...]
+        cs= []
+        for module in self.cond_blocks:
+            c = module(c)
+            cs.append(c)
+
+        for ind, module in enumerate(self.input_blocks):
+            # c = minimod(c, emb.detach())
             h = module(h, emb)
+            print('h size is', h.size())
+            if (ind+1) % 3 == 0 and ind > 2 and ind < 1:
+                # h = self.enhance(cs[ind//3],h)
+                # h = self.enhance(cs.pop(0),h)
+                c = cs.pop(0)
+                # print('c size is', c.size())
+                cu = c / th.mean(c)
+                hu = h / th.mean(h)
+                h = cu * hu * h
+                # h = h + cs.pop(0)
+                # print("ind is",ind)
+                # c = self.cond_blocks[ind//3 + 1](c)
+
+                # h += nn.Conv2d(4,128,3,1,1).to(device = h.device)(x)
             hs.append(h)
+        # h = h + cs.pop(0)
         h = self.middle_block(h, emb)
         for module in self.output_blocks:
             h = th.cat([h, hs.pop()], dim=1)

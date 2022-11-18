@@ -136,6 +136,7 @@ def create_model(
     class_cond=False,
     use_checkpoint=False,
     attention_resolutions="16",
+    in_ch=4,
     num_heads=1,
     num_head_channels=-1,
     num_heads_upsample=-1,
@@ -165,7 +166,7 @@ def create_model(
 
     return UNetModel(
         image_size=image_size,
-        in_channels=5,
+        in_channels=in_ch,
         model_channels=num_channels,
         out_channels=2,#(3 if not learn_sigma else 6),
         num_res_blocks=num_res_blocks,

@@ -574,7 +574,8 @@ class GaussianDiffusion:
                     viz.image(visualize(img.cpu()[0, -1,...]), opts=dict(caption="sample"+ str(i) ))
 
                 with th.no_grad():
-                    if img.shape != (1, 5, 224, 224):
+                    # print('img bef size',img.size())
+                    if img.shape != (1, 4, 256, 256):
                         img = torch.cat((org_MRI,img), dim=1)       #in every step, make sure to concatenate the original image to the sampled segmentation mask
 
                     out = self.p_sample(
