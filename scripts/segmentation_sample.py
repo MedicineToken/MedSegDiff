@@ -19,6 +19,7 @@ import torch.distributed as dist
 from guided_diffusion import dist_util, logger
 from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.isicloader import ISICDataset
+import torchvision.utils as vutils
 from guided_diffusion.script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
@@ -49,17 +50,15 @@ def tensor_to_img_array(tensor):
     image = np.transpose(image, [0, 2, 3, 1])
     return image
 
-def export(tensor, img_path=None):
+def export(tar, img_path=None):
     # image_name = image_name or "image.jpg"
-    c = tensor.size(1)
+    c = tar.size(1)
     if c == 3:
-        vutils.save_image(tensor, fp = img_path)
+        vutils.save_image(tar, fp = img_path)
     else:
-        w_map = tensor[:,-1,:,:].unsqueeze(1)
-        w_map = 1 - tensor_to_img_array(w_map).squeeze()
-        w_map = (w_map * 255).astype(np.uint8)
-
-        Image.fromarray(w_map,'L').save(img_path)
+        s = th.tensor(tar)[:,-1,:,:].unsqueeze(1)
+        s = th.cat((s,s,s),1)
+        vutils.save_image(s, fp = img_path)
 
 
 def main():
@@ -68,6 +67,7 @@ def main():
     logger.configure()
 
     logger.log("creating model and diffusion...")
+
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
@@ -88,10 +88,17 @@ def main():
     data = iter(datal)
     all_images = []
 
-    summary(model.to(dist_util.dev()), [(4, 256, 256),(1,)])
+    # summary(model.to(dist_util.dev()), [(4, 256, 256),(1,)])
+    # for k,v in th.load("./res-1119/savedmodel015000.pt").items():
+    #     print(k,'\n',v.size())
+
+    # for name, param in model.named_parameters():
+    #     if param.requires_grad:
+    #         print(name, param.data.size())
 
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location="cpu")
+        # th.load("./res-1119/savedmodel015000.pt")
     )
     model.to(dist_util.dev())
     if args.use_fp16:
@@ -101,7 +108,6 @@ def main():
         b, m, path = next(data)  #should return an image from the dataloader "data"
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)     #add a noise channel$
-        print('img shape is',img.size())
         # img = b
         slice_ID=path[0].split("_")[-1].split('.')[0]
 
@@ -129,16 +135,25 @@ def main():
                 clip_denoised=args.clip_denoised,
                 model_kwargs=model_kwargs,
             )
+            print('x_noise size', x_noisy.size())
+            print('org size',org.size())
 
             end.record()
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
 
-            s = th.tensor(sample)
+            s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
+            s = th.cat((s,s,s),1)
+            n = th.tensor(x_noisy)[:,:-1,:,:]
+            o = th.tensor(org)[:,:-1,:,:]
             print('sample size is', s.size())
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
-            export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
+            # export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
             # th.save(s, './results/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
+            tup = (s,n,o)
+            # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
+            compose = th.cat(tup,0)
+            vutils.save_image(compose, fp = './results/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
