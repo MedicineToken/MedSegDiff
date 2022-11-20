@@ -934,7 +934,7 @@ class GaussianDiffusion:
 
         if self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
 
-            model_output, cal = model(x_t, self._scale_timesteps(t), **model_kwargs)
+            model_output = model(x_t, self._scale_timesteps(t), **model_kwargs)
             if self.model_var_type in [
                 ModelVarType.LEARNED,
                 ModelVarType.LEARNED_RANGE,
@@ -967,13 +967,13 @@ class GaussianDiffusion:
             }[self.model_mean_type]
 
             # model_output = (cal > 0.5) * (model_output >0.5) * model_output if 2. * (cal*model_output).sum() / (cal+model_output).sum() < 0.75 else model_output
-            terms["mse_diff"] = mean_flat((target - model_output) ** 2 )
-            terms["loss_cal"] = mean_flat((res - cal) ** 2)
+            terms["mse"] = mean_flat((target - model_output) ** 2 )
+            # terms["loss_cal"] = mean_flat((res - cal) ** 2)
             # terms["mse"] = (terms["mse_diff"] + terms["mse_cal"]) / 2.
             if "vb" in terms:
-                terms["loss"] = terms["mse_diff"] + terms["vb"]
+                terms["loss"] = terms["mse"] + terms["vb"]
             else:
-                terms["loss"] = terms["mse_diff"] 
+                terms["loss"] = terms["mse"] 
 
         else:
             raise NotImplementedError(self.loss_type)

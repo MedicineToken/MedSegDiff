@@ -729,9 +729,9 @@ class UNetModel(nn.Module):
         #     )
 
         self.out = nn.Sequential(
-            normalization(ch),
+            normalization(ch + 32),
             nn.SiLU(),
-            zero_module(conv_nd(dims, model_channels, out_channels, 3, padding=1)),
+            zero_module(conv_nd(dims, model_channels + 32, out_channels, 3, padding=1)),
         )
 
         if high_way:
@@ -764,9 +764,9 @@ class UNetModel(nn.Module):
             )
             self.decoder1 = self._block(features * 2, features, name="dec1")
 
-            self.conv = nn.Conv2d(
-                in_channels=features, out_channels=out_channels, kernel_size=1
-            )
+            # self.conv = nn.Conv2d(
+            #     in_channels=features, out_channels=out_channels, kernel_size=1
+            # )
 
     def convert_to_fp16(self):
         """
@@ -809,7 +809,8 @@ class UNetModel(nn.Module):
         dec1 = self.upconv1(dec2)
         dec1 = th.cat((dec1, enc1), dim=1)
         dec1 = self.decoder1(dec1)
-        return th.sigmoid(self.conv(dec1))
+        # return th.sigmoid(self.conv(dec1))
+        return dec1 #ch = 32
 
     @staticmethod
     def _block(in_channels, features, name):
@@ -930,8 +931,10 @@ class UNetModel(nn.Module):
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb)
         h = h.type(x.dtype)
+        h = th.cat((h,cal),1) #32+128
         out = self.out(h)
-        return out, cal
+
+        return out
 
 
 class SuperResModel(UNetModel):
