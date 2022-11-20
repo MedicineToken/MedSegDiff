@@ -966,12 +966,14 @@ class GaussianDiffusion:
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
 
-            model_output = (cal > 0.5) * (model_output >0.5) * model_output if 2. * (cal*model_output).sum() / (cal+model_output).sum() < 0.75 else model_output
-            terms["mse"] = mean_flat((target - model_output) ** 2) + mean_flat((target - cal) ** 2)
+            # model_output = (cal > 0.5) * (model_output >0.5) * model_output if 2. * (cal*model_output).sum() / (cal+model_output).sum() < 0.75 else model_output
+            terms["mse_diff"] = mean_flat((target - model_output) ** 2 )
+            terms["loss_cal"] = mean_flat((res - cal) ** 2)
+            # terms["mse"] = (terms["mse_diff"] + terms["mse_cal"]) / 2.
             if "vb" in terms:
-                terms["loss"] = terms["mse"] + terms["vb"]
+                terms["loss"] = terms["mse_diff"] + terms["vb"]
             else:
-                terms["loss"] = terms["mse"]
+                terms["loss"] = terms["mse_diff"] 
 
         else:
             raise NotImplementedError(self.loss_type)
