@@ -153,7 +153,7 @@ def main():
             tup = (s,n,o)
             # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
             compose = th.cat(tup,0)
-            vutils.save_image(compose, fp = './results/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
+            vutils.save_image(compose, fp = './results-1120gpu1/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
