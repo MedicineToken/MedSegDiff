@@ -248,7 +248,7 @@ class TrainLoop:
             losses = losses1[0]
             sample = losses1[1]
 
-            loss = (losses["loss"] * weights).mean()
+            loss = (losses["loss"] * weights + losses['loss_cal'] * 10).mean()
 
             log_loss_dict(
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}

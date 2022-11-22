@@ -729,9 +729,9 @@ class UNetModel(nn.Module):
         #     )
 
         self.out = nn.Sequential(
-            normalization(ch + 32),
+            normalization(ch ),
             nn.SiLU(),
-            zero_module(conv_nd(dims, model_channels + 32, out_channels, 3, padding=1)),
+            zero_module(conv_nd(dims, model_channels , out_channels, 3, padding=1)),
         )
 
         if high_way:
@@ -746,6 +746,9 @@ class UNetModel(nn.Module):
             self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
 
             self.bottleneck = self._block(features * 8, features * 16, name="bottleneck")
+
+
+            self.poolm = nn.MaxPool2d(kernel_size=2, stride=2)
 
             self.upconv4 = nn.ConvTranspose2d(
                 features * 16, features * 8, kernel_size=2, stride=2
@@ -810,7 +813,7 @@ class UNetModel(nn.Module):
         dec1 = th.cat((dec1, enc1), dim=1)
         dec1 = self.decoder1(dec1)
         # return th.sigmoid(self.conv(dec1))
-        return dec1 #ch = 32
+        return bottleneck, dec1 #ch = 512, 32
 
     @staticmethod
     def _block(in_channels, features, name):
@@ -869,7 +872,7 @@ class UNetModel(nn.Module):
         h = x.type(self.dtype)
         # cs = self.mob(h[:,:-1,...])
         c = h[:,:-1,...]
-        cal = self.highway_forward(c)
+        uemb, cal = self.highway_forward(c)
         # print('h size is', h.size())
         # cs= []
         # for module in self.cond_blocks:
@@ -925,16 +928,15 @@ class UNetModel(nn.Module):
             # h = self.enhance(c,h)
 
             hs.append(h)
-        h = h + c
+        h = h + c + self.poolm(uemb)
         h = self.middle_block(h, emb)
         for module in self.output_blocks:
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb)
         h = h.type(x.dtype)
-        h = th.cat((h,cal),1) #32+128
         out = self.out(h)
 
-        return out
+        return out, cal
 
 
 class SuperResModel(UNetModel):

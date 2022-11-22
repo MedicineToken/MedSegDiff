@@ -256,8 +256,11 @@ class GaussianDiffusion:
             model_kwargs = {}
         B, C = x.shape[:2]
         C=1
+        cal = 0
         assert t.shape == (B,)
         model_output = model(x, self._scale_timesteps(t), **model_kwargs)
+        if len(model_output) == 2:
+            model_output, cal = model_output
         x=x[:,-1:,...]  #loss is only calculated on the last channel, not on the input brain MR image
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
             assert model_output.shape == (B, C * 2, *x.shape[2:])
@@ -323,6 +326,7 @@ class GaussianDiffusion:
             "variance": model_variance,
             "log_variance": model_log_variance,
             "pred_xstart": pred_xstart,
+            'cal': cal,
         }
 
 
@@ -934,7 +938,7 @@ class GaussianDiffusion:
 
         if self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
 
-            model_output = model(x_t, self._scale_timesteps(t), **model_kwargs)
+            model_output, cal = model(x_t, self._scale_timesteps(t), **model_kwargs)
             if self.model_var_type in [
                 ModelVarType.LEARNED,
                 ModelVarType.LEARNED_RANGE,
@@ -967,13 +971,13 @@ class GaussianDiffusion:
             }[self.model_mean_type]
 
             # model_output = (cal > 0.5) * (model_output >0.5) * model_output if 2. * (cal*model_output).sum() / (cal+model_output).sum() < 0.75 else model_output
-            terms["mse"] = mean_flat((target - model_output) ** 2 )
-            # terms["loss_cal"] = mean_flat((res - cal) ** 2)
+            terms["mse_diff"] = mean_flat((target - model_output) ** 2 )
+            terms["loss_cal"] = mean_flat((res - cal) ** 2)
             # terms["mse"] = (terms["mse_diff"] + terms["mse_cal"]) / 2.
             if "vb" in terms:
-                terms["loss"] = terms["mse"] + terms["vb"]
+                terms["loss"] = terms["mse_diff"] + terms["vb"]
             else:
-                terms["loss"] = terms["mse"] 
+                terms["loss"] = terms["mse_diff"] 
 
         else:
             raise NotImplementedError(self.loss_type)
