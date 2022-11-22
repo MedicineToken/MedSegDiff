@@ -129,14 +129,14 @@ def main():
             sample_fn = (
                 diffusion.p_sample_loop_known if not args.use_ddim else diffusion.ddim_sample_loop_known
             )
-            sample, x_noisy, org = sample_fn(
+            sample, x_noisy, org, cal, cal_out = sample_fn(
                 model,
                 (args.batch_size, 3, args.image_size, args.image_size), img,
-                clip_denoised=args.clip_denoised,
+                clip_denoised=args.clip_denoised, 
                 model_kwargs=model_kwargs,
             )
-            print('x_noise size', x_noisy.size())
-            print('org size',org.size())
+            print('cal size', cal.size())
+            print('cal_out size',cal_out.size())
 
             end.record()
             th.cuda.synchronize()
@@ -144,16 +144,21 @@ def main():
 
             s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
             s = th.cat((s,s,s),1)
-            n = th.tensor(x_noisy)[:,:-1,:,:]
+            # n = th.tensor(x_noisy)[:,:-1,:,:]
             o = th.tensor(org)[:,:-1,:,:]
+            o = th.cat((o,o,o),1)
+            c = th.tensor(cal)
+            co = th.tensor(cal_out)
+            c = th.cat((c,c,c),1)
+            co = th.cat((co,co,co),1)
             print('sample size is', s.size())
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
             # export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
             # th.save(s, './results/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
-            tup = (s,n,o)
+            tup = (s,o,c,co)
             # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
             compose = th.cat(tup,0)
-            vutils.save_image(compose, fp = './results-1120merge/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
+            vutils.save_image(compose, fp = './res-1121merge/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
