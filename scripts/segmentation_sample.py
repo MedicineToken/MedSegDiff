@@ -117,8 +117,6 @@ def main():
                 clip_denoised=args.clip_denoised, 
                 model_kwargs=model_kwargs,
             )
-            print('cal size', cal.size())
-            print('cal_out size',cal_out.size())
 
             end.record()
             th.cuda.synchronize()
@@ -128,12 +126,14 @@ def main():
             s = th.cat((s,s,s),1)
             # n = th.tensor(x_noisy)[:,:-1,:,:]
             o = th.tensor(org)[:,:-1,:,:]
-            o = th.cat((o,o,o),1)
             c = th.tensor(cal)
             co = th.tensor(cal_out)
             c = th.cat((c,c,c),1)
             co = th.cat((co,co,co),1)
+            print('o size is',o.size())
             print('sample size is', s.size())
+            print('cal size', c.size())
+            print('cal_out size',co.size())
             enslist.append(co)
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
             # export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
@@ -142,7 +142,8 @@ def main():
             # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
             compose = th.cat(tup,0)
             vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
-        ensres = staple(th.stack(enslist,dim=0))
+        ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
+        print('enres size is', ensres.size())
         vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+'_ens'+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
