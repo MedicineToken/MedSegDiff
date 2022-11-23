@@ -541,13 +541,13 @@ class UNetModel(nn.Module):
             ]
         )
 
-        self.cond_blocks = nn.ModuleList(
-            [
-                TimestepEmbedSequential(
-                    conv_nd(dims, 3, model_channels, 3, padding=1)
-                )
-            ]
-        )
+        # self.cond_blocks = nn.ModuleList(
+        #     [
+        #         TimestepEmbedSequential(
+        #             conv_nd(dims, 3, model_channels, 3, padding=1)
+        #         )
+        #     ]
+        # )
         self._feature_size = model_channels
         input_block_chans = [model_channels]
         ch = model_channels
@@ -600,7 +600,7 @@ class UNetModel(nn.Module):
                         )
                     )
                 self.input_blocks.append(TimestepEmbedSequential(*layers))
-                self.cond_blocks.append(TimestepEmbedSequential(*layers))
+                # self.cond_blocks.append(TimestepEmbedSequential(*layers))
                 self._feature_size += ch
                 input_block_chans.append(ch)
 
@@ -626,24 +626,24 @@ class UNetModel(nn.Module):
                     )
                 )
 
-                self.cond_blocks.append(
-                    TimestepEmbedSequential(
-                        ResBlock(
-                            ch,
-                            time_embed_dim,
-                            dropout,
-                            out_channels=out_ch,
-                            dims=dims,
-                            use_checkpoint=use_checkpoint,
-                            use_scale_shift_norm=use_scale_shift_norm,
-                            down=True,
-                        )
-                        if resblock_updown
-                        else Downsample(
-                            ch, conv_resample, dims=dims, out_channels=out_ch
-                        )
-                    )
-                )
+                # self.cond_blocks.append(
+                #     TimestepEmbedSequential(
+                #         ResBlock(
+                #             ch,
+                #             time_embed_dim,
+                #             dropout,
+                #             out_channels=out_ch,
+                #             dims=dims,
+                #             use_checkpoint=use_checkpoint,
+                #             use_scale_shift_norm=use_scale_shift_norm,
+                #             down=True,
+                #         )
+                #         if resblock_updown
+                #         else Downsample(
+                #             ch, conv_resample, dims=dims, out_channels=out_ch
+                #         )
+                #     )
+                # )
                 ch = out_ch
                 input_block_chans.append(ch)
                 ds *= 2
@@ -878,57 +878,23 @@ class UNetModel(nn.Module):
         # for module in self.cond_blocks:
         #     c = module(c)
         #     cs.append(c)
-
-        # for ind, module in enumerate(self.input_blocks):
-        #     # c = minimod(c, emb.detach())
-        #     h = module(h, emb)
-        #     print('h size is', h.size())
-        #     if (ind+1) % 3 == 0 and  ind < 11:
-        #         # h = self.enhance(cs[ind//3],h)
-        #         # h = self.enhance(cs.pop(0),h)
-        #         c = cs.pop(0)
-        #         # print('c size is', c.size())
-        #         cu = c / th.mean(c)
-        #         hu = h / th.mean(h)
-        #         h = cu * hu * h
-        #         # h = h + cs.pop(0)
-        #         # print("ind is",ind)
-        #         # c = self.cond_blocks[ind//3 + 1](c)
-
-        #         # h += nn.Conv2d(4,128,3,1,1).to(device = h.device)(x)
-        #     hs.append(h)
-        # h = h + cs.pop(0)
         cs= []
 
-        for minimod, module in zip(self.cond_blocks, self.input_blocks):
-            # print('c size is',c.size())
-            # print("h size is",h.size())
-            # print("emb size is", emb.size())
+        # for minimod, module in zip(self.cond_blocks, self.input_blocks):
+        for module in self.input_blocks:
             if len(emb.size()) > 2:
                 emb = emb.squeeze()
             h = module(h, emb)
-            c = minimod(c, emb)
-            # print('h size is', h.size())
-            # print("c is",c)
-            # print("h is",h)
-            # print("c mean and var is ", (th.mean(c.data,1), th.var(c.data,1)))
-            # print(th.mean(c.data,1).requires_grad)
-            # print("h mean and var is ", (th.mean(h.data,1), th.var(h.data,1)))
-            # cu = (c - th.mean(c.data,1))/ th.square(th.var(c.data,1))
-            # hu = (h - th.mean(h.data,1))/th.square(th.var(h.data,1))
-            ddims = c.size(1)
-            # aff = conv_nd(2, ddims, ddims//2, 1).to(device = c.device)(th.cat([cu,hu],1))
-            # print(h.size())
-            ha = conv_nd(2, ddims, 1, 1).to(device = c.device)(h)
-            hb = th.mean(h,(2,3))
-            hb = hb[:,:,None,None]
-            # print(ha.size())
-            # print(hb.size())
-            c = c * ha * hb
-            # h = self.enhance(c,h)
+            # c = minimod(c, emb)
+            # ddims = c.size(1)
+            # ha = conv_nd(2, ddims, 1, 1).to(device = c.device)(h)
+            # hb = th.mean(h,(2,3))
+            # hb = hb[:,:,None,None]
+            # c = c * ha * hb
 
             hs.append(h)
-        h = h + c + self.poolm(uemb)
+        # h = h + c + self.poolm(uemb)
+        h = h + self.poolm(uemb)
         h = self.middle_block(h, emb)
         for module in self.output_blocks:
             h = th.cat([h, hs.pop()], dim=1)
