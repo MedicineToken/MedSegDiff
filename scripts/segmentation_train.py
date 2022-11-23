@@ -25,7 +25,7 @@ def main():
     args = create_argparser().parse_args()
 
     dist_util.setup_dist(args)
-    logger.configure()
+    logger.configure(dir = args.out_dir)
 
     logger.log("creating model and diffusion...")
 
@@ -93,7 +93,8 @@ def create_argparser():
         resume_checkpoint='',#'"./results/pretrainedmodel.pt",
         use_fp16=False,
         fp16_scale_growth=1e-3,
-        gpu_dev = "0"
+        gpu_dev = "0",
+        out_dir='./res-ind-ens-1123/'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
