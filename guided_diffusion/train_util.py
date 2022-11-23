@@ -254,6 +254,9 @@ class TrainLoop:
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
             )
             self.mp_trainer.backward(loss)
+            for name, param in self.ddp_model.named_parameters():
+                if param.grad is None:
+                    print(name)
             return  sample
 
     def _update_ema(self):
