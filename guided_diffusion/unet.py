@@ -767,9 +767,9 @@ class UNetModel(nn.Module):
             )
             self.decoder1 = self._block(features * 2, features, name="dec1")
 
-            # self.conv = nn.Conv2d(
-            #     in_channels=features, out_channels=out_channels, kernel_size=1
-            # )
+            self.conv = nn.Conv2d(
+                in_channels=features, out_channels=out_channels, kernel_size=1
+            )
 
     def convert_to_fp16(self):
         """
@@ -812,8 +812,8 @@ class UNetModel(nn.Module):
         dec1 = self.upconv1(dec2)
         dec1 = th.cat((dec1, enc1), dim=1)
         dec1 = self.decoder1(dec1)
-        # return th.sigmoid(self.conv(dec1))
-        return bottleneck, dec1 #ch = 512, 32
+        #return th.sigmoid(self.conv(dec1))
+        return bottleneck, th.sigmoid(self.conv(dec1)) #ch = 512, 32
 
     @staticmethod
     def _block(in_channels, features, name):

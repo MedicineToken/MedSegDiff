@@ -20,6 +20,7 @@ from guided_diffusion import dist_util, logger
 from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.isicloader import ISICDataset
 import torchvision.utils as vutils
+from guided_diffusion.utils import staple
 from guided_diffusion.script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
@@ -41,30 +42,11 @@ def visualize(img):
     normalized_img = (img - _min)/ (_max - _min)
     return normalized_img
 
-def dice_score(pred, targs):
-    pred = (pred>0).float()
-    return 2. * (pred*targs).sum() / (pred+targs).sum()
-
-def tensor_to_img_array(tensor):
-    image = tensor.cpu().detach().numpy()
-    image = np.transpose(image, [0, 2, 3, 1])
-    return image
-
-def export(tar, img_path=None):
-    # image_name = image_name or "image.jpg"
-    c = tar.size(1)
-    if c == 3:
-        vutils.save_image(tar, fp = img_path)
-    else:
-        s = th.tensor(tar)[:,-1,:,:].unsqueeze(1)
-        s = th.cat((s,s,s),1)
-        vutils.save_image(s, fp = img_path)
-
 
 def main():
     args = create_argparser().parse_args()
     dist_util.setup_dist(args)
-    logger.configure()
+    logger.configure(dir = args.out_dir)
 
     logger.log("creating model and diffusion...")
 
@@ -121,7 +103,7 @@ def main():
 
         start = th.cuda.Event(enable_timing=True)
         end = th.cuda.Event(enable_timing=True)
-
+        enslist = []
 
         for i in range(args.num_ensemble):  #this is for the generation of an ensemble of 5 masks.
             model_kwargs = {}
@@ -152,13 +134,16 @@ def main():
             c = th.cat((c,c,c),1)
             co = th.cat((co,co,co),1)
             print('sample size is', s.size())
+            enslist.append(co)
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
             # export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
             # th.save(s, './results/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
             tup = (s,o,c,co)
             # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
             compose = th.cat(tup,0)
-            vutils.save_image(compose, fp = './res-1121merge/'+str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
+            vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
+        ensres = staple(th.stack(enslist,dim=0))
+        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+'_ens'+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
@@ -168,8 +153,9 @@ def create_argparser():
         batch_size=1,
         use_ddim=False,
         model_path="",
-        num_ensemble=1,      #number of samples in the ensemble
-        gpu_dev = "0"
+        num_ensemble=5,      #number of samples in the ensemble
+        gpu_dev = "0",
+        out_dir='./res-ind-ens-1123/'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

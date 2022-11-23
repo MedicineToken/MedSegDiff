@@ -18,6 +18,7 @@ from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
 from scipy import ndimage
 from torchvision import transforms
+from .utils import staple, dice_score
 def standardize(img):
     mean = th.mean(img)
     std = th.std(img)
@@ -528,7 +529,9 @@ class GaussianDiffusion:
             progress=progress,
         ):
             final = sample
-
+            
+        if dice_score(final["sample"][:,-1,:,:].unsqueeze(1), final["cal"]) < 0.75:
+            final["sample"][:,-1,:,:] = final["cal"]
         cal_out = final["cal"] * final["sample"][:,-1,:,:].unsqueeze(1)
         return final["sample"], x_noisy, img, final["cal"], cal_out
 
