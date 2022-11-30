@@ -9,7 +9,7 @@ from collections import OrderedDict
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
 from .mobile_net import MobileNetV1, MobileNetV2
 from copy import deepcopy
-from .utils import softmax_helper
+from .utils import softmax_helper,sigmoid_helper
 from .utils import InitWeights_He
 from batchgenerators.augmentations.utils import pad_nd_image
 from .utils import no_op
@@ -458,6 +458,32 @@ class QKVAttention(nn.Module):
     def count_flops(model, _x, y):
         return count_flops_attn(model, _x, y)
 
+class FFParser(nn.Module):
+    def __init__(self, dim, h=128, w=65):
+        super().__init__()
+        self.complex_weight = nn.Parameter(torch.randn(dim, h, w, 2, dtype=torch.float32) * 0.02)
+        self.w = w
+        self.h = h
+
+    def forward(self, x, spatial_size=None):
+        B, C, H, W = x.shape
+        assert H == W, "height and width are not equal"
+        if spatial_size is None:
+            a = b = H
+        else:
+            a, b = spatial_size
+
+        # x = x.view(B, a, b, C)
+        x = x.to(torch.float32)
+        x = torch.fft.rfft2(x, dim=(2, 3), norm='ortho')
+        weight = torch.view_as_complex(self.complex_weight)
+        x = x * weight
+        x = torch.fft.irfft2(x, s=(H, W), dim=(2, 3), norm='ortho')
+
+        x = x.reshape(B, C, H, W)
+
+        return x
+
 
 class UNetModel(nn.Module):
     """
@@ -551,13 +577,6 @@ class UNetModel(nn.Module):
             ]
         )
 
-        # self.cond_blocks = nn.ModuleList(
-        #     [
-        #         TimestepEmbedSequential(
-        #             conv_nd(dims, 3, model_channels, 3, padding=1)
-        #         )
-        #     ]
-        # )
         self._feature_size = model_channels
         input_block_chans = [model_channels]
         ch = model_channels
@@ -576,18 +595,6 @@ class UNetModel(nn.Module):
                         use_scale_shift_norm=use_scale_shift_norm,
                     )
                 ]
-
-                # layers2 = [
-                #     ResBlock(
-                #         ch,
-                #         time_embed_dim,
-                #         dropout,
-                #         out_channels=mult * model_channels,
-                #         dims=dims,
-                #         use_checkpoint=use_checkpoint,
-                #         use_scale_shift_norm=use_scale_shift_norm,
-                #     )
-                # ]
                 ch = mult * model_channels
                 if ds in attention_resolutions:
                     layers.append(
@@ -599,18 +606,7 @@ class UNetModel(nn.Module):
                             use_new_attention_order=use_new_attention_order,
                         )
                     )
-
-                    # layers2.append(
-                    #     AttentionBlock(
-                    #         ch,
-                    #         use_checkpoint=use_checkpoint,
-                    #         num_heads=num_heads,
-                    #         num_head_channels=num_head_channels,
-                    #         use_new_attention_order=use_new_attention_order,
-                    #     )
-                    # )
                 self.input_blocks.append(TimestepEmbedSequential(*layers))
-                # self.cond_blocks.append(TimestepEmbedSequential(*layers2))
                 self._feature_size += ch
                 input_block_chans.append(ch)
 
@@ -636,24 +632,6 @@ class UNetModel(nn.Module):
                     )
                 )
 
-                # self.cond_blocks.append(
-                #     TimestepEmbedSequential(
-                #         ResBlock(
-                #             ch,
-                #             time_embed_dim,
-                #             dropout,
-                #             out_channels=out_ch,
-                #             dims=dims,
-                #             use_checkpoint=use_checkpoint,
-                #             use_scale_shift_norm=use_scale_shift_norm,
-                #             down=True,
-                #         )
-                #         if resblock_updown
-                #         else Downsample(
-                #             ch, conv_resample, dims=dims, out_channels=out_ch
-                #         )
-                #     )
-                # )
                 ch = out_ch
                 input_block_chans.append(ch)
                 ds *= 2
@@ -732,12 +710,6 @@ class UNetModel(nn.Module):
                 self.output_blocks.append(TimestepEmbedSequential(*layers))
                 self._feature_size += ch
 
-        # self.cond_blocks = nn.ModuleList()
-        # for i in range(4):
-        #     self.cond_blocks.append(
-        #         MobBlock(i)
-        #     )
-
         self.out = nn.Sequential(
             normalization(ch),
             nn.SiLU(),
@@ -747,40 +719,6 @@ class UNetModel(nn.Module):
         if high_way:
             features = 32
             self.hwm = Generic_UNet(3, features, 1, 5)
-            # self.encoder1 = self._block(in_channels-1, features, name="enc1")
-            # self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-            # self.encoder2 = self._block(features, features * 2, name="enc2")
-            # self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-            # self.encoder3 = self._block(features * 2, features * 4, name="enc3")
-            # self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
-            # self.encoder4 = self._block(features * 4, features * 8, name="enc4")
-            # self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-            # self.bottleneck = self._block(features * 8, features * 16, name="bottleneck")
-
-
-            # self.poolm = nn.MaxPool2d(kernel_size=2, stride=2)
-
-            # self.upconv4 = nn.ConvTranspose2d(
-            #     features * 16, features * 8, kernel_size=2, stride=2
-            # )
-            # self.decoder4 = self._block((features * 8) * 2, features * 8, name="dec4")
-            # self.upconv3 = nn.ConvTranspose2d(
-            #     features * 8, features * 4, kernel_size=2, stride=2
-            # )
-            # self.decoder3 = self._block((features * 4) * 2, features * 4, name="dec3")
-            # self.upconv2 = nn.ConvTranspose2d(
-            #     features * 4, features * 2, kernel_size=2, stride=2
-            # )
-            # self.decoder2 = self._block((features * 2) * 2, features * 2, name="dec2")
-            # self.upconv1 = nn.ConvTranspose2d(
-            #     features * 2, features, kernel_size=2, stride=2
-            # )
-            # self.decoder1 = self._block(features * 2, features, name="dec1")
-
-            # self.conv = nn.Conv2d(
-            #     in_channels=features, out_channels=out_channels, kernel_size=1
-            # )
 
     def convert_to_fp16(self):
         """
@@ -804,61 +742,7 @@ class UNetModel(nn.Module):
         return cu * hu * h
     
     def highway_forward(self,x, hs):
-        # enc1 = self.encoder1(x)
-        # enc2 = self.encoder2(self.pool1(enc1))
-        # enc3 = self.encoder3(self.pool2(enc2))
-        # enc4 = self.encoder4(self.pool3(enc3))
-
-        # bottleneck = self.bottleneck(self.pool4(enc4))
-
-        # dec4 = self.upconv4(bottleneck)
-        # dec4 = th.cat((dec4, enc4), dim=1)
-        # dec4 = self.decoder4(dec4)
-        # dec3 = self.upconv3(dec4)
-        # dec3 = th.cat((dec3, enc3), dim=1)
-        # dec3 = self.decoder3(dec3)
-        # dec2 = self.upconv2(dec3)
-        # dec2 = th.cat((dec2, enc2), dim=1)
-        # dec2 = self.decoder2(dec2)
-        # dec1 = self.upconv1(dec2)
-        # dec1 = th.cat((dec1, enc1), dim=1)
-        # dec1 = self.decoder1(dec1)
-        # #return th.sigmoid(self.conv(dec1))
-        # return bottleneck, th.sigmoid(self.conv(dec1)) #ch = 512, 32
         return self.hwm(x,hs)
-
-    # @staticmethod
-    # def _block(in_channels, features, name):
-    #     return nn.Sequential(
-    #         OrderedDict(
-    #             [
-    #                 (
-    #                     name + "conv1",
-    #                     nn.Conv2d(
-    #                         in_channels=in_channels,
-    #                         out_channels=features,
-    #                         kernel_size=3,
-    #                         padding=1,
-    #                         bias=False,
-    #                     ),
-    #                 ),
-    #                 (name + "norm1", nn.BatchNorm2d(num_features=features)),
-    #                 (name + "relu1", nn.ReLU(inplace=True)),
-    #                 (
-    #                     name + "conv2",
-    #                     nn.Conv2d(
-    #                         in_channels=features,
-    #                         out_channels=features,
-    #                         kernel_size=3,
-    #                         padding=1,
-    #                         bias=False,
-    #                     ),
-    #                 ),
-    #                 (name + "norm2", nn.BatchNorm2d(num_features=features)),
-    #                 (name + "relu2", nn.ReLU(inplace=True)),
-    #             ]
-    #         )
-    #     )
 
 
     def forward(self, x, timesteps, y=None):
@@ -882,28 +766,14 @@ class UNetModel(nn.Module):
             emb = emb + self.label_emb(y)
 
         h = x.type(self.dtype)
-        # cs = self.mob(h[:,:-1,...])
         c = h[:,:-1,...]
-        # cs= []
-        # for module in self.cond_blocks:
-        #     c = module(c)
-        #     cs.append(c)
         hlist= []
-        # for minimod, module in zip(self.cond_blocks, self.input_blocks):
         for ind, module in enumerate(self.input_blocks):
             if len(emb.size()) > 2:
                 emb = emb.squeeze()
             h = module(h, emb)
-            # print('h size is',h.size())
-            # c = minimod(c, emb)
-            # ddims = c.size(1)
-            # ha = conv_nd(2, ddims, 1, 1).to(device = c.device)(h)
-            # hb = th.mean(h,(2,3))
-            # hb = hb[:,:,None,None]
-            # c = c * ha * hb
             hs.append(h)
         uemb, cal = self.highway_forward(c, [hs[3],hs[6],hs[9],hs[12]])
-        # h = h + c + self.poolm(uemb)
         h = h + uemb
         h = self.middle_block(h, emb)
         for module in self.output_blocks:
@@ -2060,7 +1930,7 @@ class Generic_UNet(SegmentationNetwork):
                  norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
                  dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
                  nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=False, dropout_in_localization=False,
-                 final_nonlin=softmax_helper, weightInitializer=InitWeights_He(1e-2), pool_op_kernel_sizes=None,
+                 final_nonlin=sigmoid_helper, weightInitializer=InitWeights_He(1e-2), pool_op_kernel_sizes=None,
                  conv_kernel_sizes=None,
                  upscale_logits=False, convolutional_pooling=False, convolutional_upsampling=False,
                  max_num_features=None, basic_block=ConvDropoutNormNonlin,
@@ -2139,6 +2009,7 @@ class Generic_UNet(SegmentationNetwork):
         self.conv_blocks_localization = []
         self.td = []
         self.tu = []
+        self.ffparser = []
         self.seg_outputs = []
 
         output_features = base_num_features
@@ -2159,12 +2030,17 @@ class Generic_UNet(SegmentationNetwork):
                                                               self.norm_op_kwargs, self.dropout_op,
                                                               self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
                                                               first_stride, basic_block=basic_block))
+            if d != num_pool - 1:
+                self.ffparser.append(FFParser(output_features, 256 // (2 **(d+1)), 256 // (2 **(d+2))+1))
+
             if not self.convolutional_pooling:
                 self.td.append(pool_op(pool_op_kernel_sizes[d]))
             input_features = output_features
             output_features = int(np.round(output_features * feat_map_mul_on_downscale))
 
             output_features = min(output_features, self.max_num_features)
+        
+
 
         # now the bottleneck.
         # determine the first stride
@@ -2250,6 +2126,7 @@ class Generic_UNet(SegmentationNetwork):
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.conv_blocks_localization)
         self.conv_blocks_context = nn.ModuleList(self.conv_blocks_context)
+        self.ffparser = nn.ModuleList(self.ffparser)
         self.td = nn.ModuleList(self.td)
         self.tu = nn.ModuleList(self.tu)
         self.seg_outputs = nn.ModuleList(self.seg_outputs)
@@ -2271,10 +2148,11 @@ class Generic_UNet(SegmentationNetwork):
                 x = self.td[d](x)
             if hs:
                 h = hs.pop(0)
-                # print('h size is', h.size())
                 ddims = h.size(1)
-                ha = conv_nd(2, ddims, 1, 1).to(device = x.device)(h)
-                hb = th.mean(conv_nd(2, ddims, x.size(1), 1).to(device = x.device)(h),(2,3))
+                h = conv_nd(2, ddims, x.size(1), 1).to(device = x.device)(h)
+                h = self.ffparser[d](h)
+                ha = conv_nd(2, x.size(1), 1, 1).to(device = x.device)(h)
+                hb = th.mean(h,(2,3))
                 hb = hb[:,:,None,None]
                 x = x * ha * hb
             

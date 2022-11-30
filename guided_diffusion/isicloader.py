@@ -14,7 +14,7 @@ import pandas as pd
 from skimage.transform import rotate
 
 class ISICDataset(Dataset):
-    def __init__(self, args, data_path , transform = None, transform_seg = None, mode = 'Training',plane = False):
+    def __init__(self, args, data_path , transform = None, mode = 'Training',plane = False):
 
 
         df = pd.read_csv(os.path.join(data_path, 'ISBI2016_ISIC_Part3B_' + mode + '_GroundTruth.csv'), encoding='gbk')
@@ -23,7 +23,6 @@ class ISICDataset(Dataset):
         self.data_path = data_path
         self.mode = mode
 
-        self.transform_seg = transform_seg
         self.transform = transform
 
     def __len__(self):
@@ -46,13 +45,12 @@ class ISICDataset(Dataset):
             label = int(self.label_list[index])
 
         if self.transform:
+            state = torch.get_rng_state()
             img = self.transform(img)
-
-        if self.transform_seg:
-            mask = self.transform_seg(mask)
+            torch.set_rng_state(state)
+            mask = self.transform(mask)
 
         if self.mode == 'Training':
-            # img = torch.cat((img,mask),0)
             return (img, mask)
         else:
             return (img, mask, name)

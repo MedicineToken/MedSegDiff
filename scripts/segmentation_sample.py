@@ -1,7 +1,4 @@
-"""
-Generate a large batch of image samples from a model and save them as a large
-numpy array. This can be used to produce samples for FID evaluation.
-"""
+
 
 import argparse
 import os
@@ -56,13 +53,10 @@ def main():
 
     transform_test = transforms.Compose([
     transforms.Resize((args.image_size,args.image_size)),
-    # transforms.RandomCrop((img_size, img_size)),  # padding=10
-    # transforms.RandomHorizontalFlip(),
-    # transforms.RandomRotation(10, resample=PIL.Image.BILINEAR),
     transforms.ToTensor(),
     ])
 
-    ds = ISICDataset(args, args.data_dir, transform_test, transform_test, mode = 'Test')
+    ds = ISICDataset(args, args.data_dir, transform_test, mode = 'Test')
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=1,
@@ -70,17 +64,9 @@ def main():
     data = iter(datal)
     all_images = []
 
-    # summary(model.to(dist_util.dev()), [(4, 256, 256),(1,)])
-    # for k,v in th.load("./res-1119/savedmodel015000.pt").items():
-    #     print(k,'\n',v.size())
-
-    # for name, param in model.named_parameters():
-    #     if param.requires_grad:
-    #         print(name, param.data.size())
 
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location="cpu")
-        # th.load("./res-1119/savedmodel015000.pt")
     )
     model.to(dist_util.dev())
     if args.use_fp16:
@@ -90,14 +76,7 @@ def main():
         b, m, path = next(data)  #should return an image from the dataloader "data"
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)     #add a noise channel$
-        # img = b
         slice_ID=path[0].split("_")[-1].split('.')[0]
-
-        # viz.image(visualize(img[0,0,...]), opts=dict(caption="img input0"))
-        # viz.image(visualize(img[0, 1, ...]), opts=dict(caption="img input1"))
-        # viz.image(visualize(img[0, 2, ...]), opts=dict(caption="img input2"))
-        # viz.image(visualize(img[0, 3, ...]), opts=dict(caption="img input3"))
-        # viz.image(visualize(img[0, 4, ...]), opts=dict(caption="img input4"))
 
         logger.log("sampling...")
 
@@ -121,30 +100,12 @@ def main():
             end.record()
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
-
-            s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
-            s = th.cat((s,s,s),1)
-            # n = th.tensor(x_noisy)[:,:-1,:,:]
-            o = th.tensor(org)[:,:-1,:,:]
-            c = th.tensor(cal)
+ 
             co = th.tensor(cal_out)
-            c = th.cat((c,c,c),1)
             co = th.cat((co,co,co),1)
-            print('o size is',o.size())
-            print('sample size is', s.size())
-            print('cal size', c.size())
-            print('cal_out size',co.size())
             enslist.append(co)
-            # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
-            # export(s, './results/'+str(slice_ID)+'_output'+str(i)+".jpg")
-            # th.save(s, './results/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
-            tup = (s,o,c,co)
-            # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
-            compose = th.cat(tup,0)
-            vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
         ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
-        print('enres size is', ensres.size())
-        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+'_ens'+".jpg", nrow = 1, padding = 10)
+        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
@@ -156,7 +117,7 @@ def create_argparser():
         model_path="",
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
-        out_dir='./res-ind-ens-1123/'
+        out_dir='./results/'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

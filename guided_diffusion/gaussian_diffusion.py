@@ -531,8 +531,9 @@ class GaussianDiffusion:
             final = sample
             
         if dice_score(final["sample"][:,-1,:,:].unsqueeze(1), final["cal"]) < 0.65:
-            final["sample"][:,-1,:,:] = final["cal"]
-        cal_out = final["cal"] * final["sample"][:,-1,:,:].unsqueeze(1)
+            cal_out = torch.clamp(final["cal"] + 0.25 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
+        else:
+            cal_out = torch.clamp(final["cal"] * 0.5 + 0.5 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
         return final["sample"], x_noisy, img, final["cal"], cal_out
 
     def p_sample_loop_progressive(

@@ -1,6 +1,4 @@
-"""
-Train a diffusion model on images.
-"""
+
 import sys
 import argparse
 sys.path.append("..")
@@ -17,8 +15,8 @@ from guided_diffusion.script_util import (
 )
 import torch as th
 from guided_diffusion.train_util import TrainLoop
-# from visdom import Visdom
-# viz = Visdom(port=8850)
+from visdom import Visdom
+viz = Visdom(port=8850)
 import torchvision.transforms as transforms
 
 def main():
@@ -28,9 +26,6 @@ def main():
     logger.configure(dir = args.out_dir)
 
     logger.log("creating model and diffusion...")
-
-    # for k,v in th.load("./res-1118/savedmodel030000.pt").items():
-    #     print(k,'\n',v.size())
 
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
@@ -42,13 +37,10 @@ def main():
 
     transform_train = transforms.Compose([
     transforms.Resize((args.image_size,args.image_size)),
-    # transforms.RandomCrop((img_size, img_size)),  # padding=10
-    # transforms.RandomHorizontalFlip(),
-    # transforms.RandomRotation(10, resample=PIL.Image.BILINEAR),
     transforms.ToTensor(),
     ])
 
-    ds = ISICDataset(args, args.data_dir, transform_train, transform_train)
+    ds = ISICDataset(args, args.data_dir, transform_train)
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
@@ -94,7 +86,7 @@ def create_argparser():
         use_fp16=False,
         fp16_scale_growth=1e-3,
         gpu_dev = "0",
-        out_dir='./res-ind-ens-1123/'
+        out_dir='./results/'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
