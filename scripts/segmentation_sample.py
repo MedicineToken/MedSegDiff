@@ -45,23 +45,29 @@ def main():
     dist_util.setup_dist(args)
     logger.configure(dir = args.out_dir)
 
-    logger.log("creating model and diffusion...")
+    if args.data_name == 'ISIC':
+        tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
+        transform_test = transforms.Compose(tran_list)
 
-    model, diffusion = create_model_and_diffusion(
-        **args_to_dict(args, model_and_diffusion_defaults().keys())
-    )
+        ds = ISICDataset(args, args.data_dir, transform_test)
+        args.in_ch = 4
+    elif args.data_name == 'BRATS':
+        tran_list = [transforms.Resize((args.image_size,args.image_size)),]
+        transform_test = transforms.Compose(tran_list)
 
-    transform_test = transforms.Compose([
-    transforms.Resize((args.image_size,args.image_size)),
-    transforms.ToTensor(),
-    ])
-
-    ds = ISICDataset(args, args.data_dir, transform_test, mode = 'Test')
+        ds = BRATSDataset(args.data_dir,transform_test)
+        args.in_ch = 5
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=1,
         shuffle=False)
     data = iter(datal)
+
+    logger.log("creating model and diffusion...")
+
+    model, diffusion = create_model_and_diffusion(
+        **args_to_dict(args, model_and_diffusion_defaults().keys())
+    )
     all_images = []
 
 
@@ -109,7 +115,8 @@ def main():
 
 def create_argparser():
     defaults = dict(
-        data_dir="./data/testing",
+        data_name = 'BRATS',
+        data_dir="../dataset/brats2020/testing",
         clip_denoised=True,
         num_samples=1,
         batch_size=1,

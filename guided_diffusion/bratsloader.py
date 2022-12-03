@@ -7,7 +7,7 @@ import nibabel
 
 
 class BRATSDataset(torch.utils.data.Dataset):
-    def __init__(self, directory, test_flag=True):
+    def __init__(self, directory, transform, test_flag=True):
         '''
         directory is expected to contain some folder structure:
                   if some subfolder contains only files, all of these
@@ -19,6 +19,7 @@ class BRATSDataset(torch.utils.data.Dataset):
         '''
         super().__init__()
         self.directory = os.path.expanduser(directory)
+        self.transform = transform
 
         self.test_flag=test_flag
         if test_flag:
@@ -52,7 +53,9 @@ class BRATSDataset(torch.utils.data.Dataset):
         if self.test_flag:
             image=out
             image = image[..., 8:-8, 8:-8]     #crop to a size of (224, 224)
-            return (image, path)
+            if self.transform:
+                image = self.transform(image)
+            return (image, image, path)
         else:
 
             image = out[:-1, ...]
@@ -60,6 +63,11 @@ class BRATSDataset(torch.utils.data.Dataset):
             image = image[..., 8:-8, 8:-8]      #crop to a size of (224, 224)
             label = label[..., 8:-8, 8:-8]
             label=torch.where(label > 0, 1, 0).float()  #merge all tumor classes into one
+            if self.transform:
+                state = torch.get_rng_state()
+                image = self.transform(image)
+                torch.set_rng_state(state)
+                label = self.transform(label)
             return (image, label)
 
     def __len__(self):

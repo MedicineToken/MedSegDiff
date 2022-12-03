@@ -566,7 +566,7 @@ class GaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(time))[::-1]
-
+        org_c = img.size(1)
         org_MRI = img[:, :-1, ...]      #original brain MR image
         if progress:
             # Lazy import so that we don't depend on tqdm.
@@ -583,7 +583,7 @@ class GaussianDiffusion:
 
                 with th.no_grad():
                     # print('img bef size',img.size())
-                    if img.shape != (1, 4, 256, 256):
+                    if img.size(1) != org_c:
                         img = torch.cat((org_MRI,img), dim=1)       #in every step, make sure to concatenate the original image to the sampled segmentation mask
 
                     out = self.p_sample(

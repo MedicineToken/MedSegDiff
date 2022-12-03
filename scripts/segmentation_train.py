@@ -25,6 +25,26 @@ def main():
     dist_util.setup_dist(args)
     logger.configure(dir = args.out_dir)
 
+    logger.log("creating data loader...")
+
+    if args.data_name == 'ISIC':
+        tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
+        transform_train = transforms.Compose(tran_list)
+
+        ds = ISICDataset(args, args.data_dir, transform_train)
+        args.in_ch = 4
+    elif args.data_name == 'BRATS':
+        tran_list = [transforms.Resize((args.image_size,args.image_size)),]
+        transform_train = transforms.Compose(tran_list)
+
+        ds = BRATSDataset(args.data_dir, transform_train, test_flag=False)
+        args.in_ch = 5
+    datal= th.utils.data.DataLoader(
+        ds,
+        batch_size=args.batch_size,
+        shuffle=True)
+    data = iter(datal)
+
     logger.log("creating model and diffusion...")
 
     model, diffusion = create_model_and_diffusion(
@@ -32,20 +52,6 @@ def main():
     )
     model.to(dist_util.dev())
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
-
-    logger.log("creating data loader...")
-
-    transform_train = transforms.Compose([
-    transforms.Resize((args.image_size,args.image_size)),
-    transforms.ToTensor(),
-    ])
-
-    ds = ISICDataset(args, args.data_dir, transform_train)
-    datal= th.utils.data.DataLoader(
-        ds,
-        batch_size=args.batch_size,
-        shuffle=True)
-    data = iter(datal)
 
 
     logger.log("training...")
@@ -72,7 +78,8 @@ def main():
 
 def create_argparser():
     defaults = dict(
-        data_dir="../dataset/ISIC",
+        data_name = 'BRATS',
+        data_dir="../dataset/brats2020/training",
         schedule_sampler="uniform",
         lr=1e-4,
         weight_decay=0.0,

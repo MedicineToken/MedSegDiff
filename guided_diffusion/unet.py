@@ -718,7 +718,7 @@ class UNetModel(nn.Module):
 
         if high_way:
             features = 32
-            self.hwm = Generic_UNet(3, features, 1, 5)
+            self.hwm = Generic_UNet(self.in_channels - 1, features, 1, 5)
 
     def convert_to_fp16(self):
         """
