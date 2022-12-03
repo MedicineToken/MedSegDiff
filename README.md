@@ -1,8 +1,10 @@
 
+
 # MedSegDiff: A Diffusion Probabilistic Model for Medical Image Segmentation
 MedSegDiff is the first Diffusion Probabilistic Model (DPM) proposed for general Medical Image Segmentation. The algorithm is elaborated in our paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611).
 ## News
 22-11-30. This project is still quickly updating. Check TODO list to see what will be released next.
+22-12-03. BraTs2020 bugs fixed. Example case added.
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
 1. Download ISIC dataset from https://challenge.isic-archive.com/data/. Your dataset folder under "data_dir" should be like:
@@ -30,6 +32,40 @@ ISIC/
 `` 
 
 In default, the samples will be saved at `` ./results/`` 
+### Brain Tumor Segmentation from MRI
+1. Download BRATS2020 dataset from https://www.med.upenn.edu/cbica/brats2020/data.html. Your dataset folder should be like:
+~~~
+data
+└───training
+│   └───slice0001
+│       │   t1.nii.gz
+│       │   t2.nii.gz
+│       │   flair.nii.gz
+│       │   t1ce.nii.gz
+│       │   seg.nii.gz
+│   └───slice0002
+│       │  ...
+└───testing
+│   └───slice1000
+│       │   t1.nii.gz
+│       │   t2.nii.gz
+│       │   flair.nii.gz
+│       │   t1ce.nii.gz
+│   └───slice1001
+│       │  ...
+~~~
+    
+2. For training, run: ``python scripts/segmentation_train.py --data_dir (where you put data folder)/data/training --out_dir output data direction``
+    
+    The recommended parameters are  ``
+--image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 32
+`` 
+
+3. For sampling, run: ``python scripts/segmentation_sample.py --data_dir (where you put data folder)/data/testing --out_dir output data direction --model_path saved model``
+
+    The recommended parameters are  ``
+--image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --num_ensemble 5
+`` 
 ### Ohter Examples
 ...
 ### Run on  your own dataset
@@ -62,7 +98,7 @@ Then train it with batch size ``--batch_size 64`` and sample it with ensemble nu
 Welcome to contribute to MedSegDiff. Any technique can improve the performance or speed up the algorithm is appreciated🙏. I am writting MedSegDiff V2, aiming at Nature journals/CVPR like publication. I'm glad to list the contributors as my co-authors🤗.
 ## TODO LIST
 
-- [ ] Fix bugs in Brats
+- [x] Fix bugs in BRATS. Add BRATS example.
 - [ ] Release REFUGE and DDIT dataloaders and examples
 - [ ] Speed up sampling by DPM-solver
 - [ ] Inference of depth
