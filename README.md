@@ -106,6 +106,7 @@ Welcome to contribute to MedSegDiff. Any technique can improve the performance o
 - [ ] Sample and Vis in training
 - [ ] Release pre processing and post processing
 - [ ] Release evaluation
+- [ ] Deploy on HuggingFace
 - [ ] yaml configuration
 
 ## Thanks
