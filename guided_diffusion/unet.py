@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
-from .mobile_net import MobileNetV1, MobileNetV2
 from copy import deepcopy
 from .utils import softmax_helper,sigmoid_helper
 from .utils import InitWeights_He
