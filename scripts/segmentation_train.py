@@ -50,7 +50,9 @@ def main():
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    model.to(dist_util.dev())
+    if args.multi_gpu:
+        model = th.nn.DataParallel(model,device_ids=[int(id) for id in args.multi_gpu.split(',')])
+    model.to(device = th.device('cuda', int(args.gpu_dev)))
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
 
 
@@ -93,6 +95,7 @@ def create_argparser():
         use_fp16=False,
         fp16_scale_growth=1e-3,
         gpu_dev = "0",
+        multi_gpu = None, #"0,1,2"
         out_dir='./results/'
     )
     defaults.update(model_and_diffusion_defaults())
