@@ -102,7 +102,7 @@ Welcome to contribute to MedSegDiff. Any technique can improve the performance o
 - [ ] Release REFUGE and DDIT dataloaders and examples
 - [ ] Speed up sampling by DPM-solver
 - [ ] Inference of depth
-- [ ] Fix bugs in Multi-GPU parallel
+- [x] Fix bugs in Multi-GPU parallel
 - [ ] Sample and Vis in training
 - [ ] Release pre processing and post processing
 - [ ] Release evaluation
