@@ -49,7 +49,7 @@ def main():
         tran_list = [transforms.Resize((args.image_size,args.image_size)), transforms.ToTensor(),]
         transform_test = transforms.Compose(tran_list)
 
-        ds = ISICDataset(args, args.data_dir, transform_test)
+        ds = ISICDataset(args, args.data_dir, transform_test, mode = 'Test')
         args.in_ch = 4
     elif args.data_name == 'BRATS':
         tran_list = [transforms.Resize((args.image_size,args.image_size)),]
@@ -71,9 +71,19 @@ def main():
     all_images = []
 
 
-    model.load_state_dict(
-        dist_util.load_state_dict(args.model_path, map_location="cpu")
-    )
+    state_dict = dist_util.load_state_dict(args.model_path, map_location="cpu")
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        # name = k[7:] # remove `module.`
+        if 'module.' in k:
+            new_state_dict[k[7:]] = v
+            # load params
+        else:
+            new_state_dict = state_dict
+
+    model.load_state_dict(new_state_dict)
+
     model.to(dist_util.dev())
     if args.use_fp16:
         model.convert_to_fp16()

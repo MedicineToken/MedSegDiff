@@ -24,7 +24,8 @@ def setup_dist(args):
     """
     if dist.is_initialized():
         return
-    # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_dev
+    if not args.multi_gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_dev
 
     backend = "gloo" if not th.cuda.is_available() else "nccl"
 
@@ -64,6 +65,7 @@ def load_state_dict(path, **kwargs):
             data = f.read()
     else:
         data = None
+    
     return th.load(io.BytesIO(data), **kwargs)
 
 

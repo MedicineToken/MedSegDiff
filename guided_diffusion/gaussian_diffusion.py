@@ -19,6 +19,7 @@ from .losses import normal_kl, discretized_gaussian_log_likelihood
 from scipy import ndimage
 from torchvision import transforms
 from .utils import staple, dice_score
+from .dpm_solver import NoiseScheduleVP, model_wrapper, DPM_Solver
 def standardize(img):
     mean = th.mean(img)
     std = th.std(img)
@@ -128,12 +129,14 @@ class GaussianDiffusion:
         model_mean_type,
         model_var_type,
         loss_type,
+        dpm_solver,
         rescale_timesteps=False,
     ):
         self.model_mean_type = model_mean_type
         self.model_var_type = model_var_type
         self.loss_type = loss_type
         self.rescale_timesteps = rescale_timesteps
+        self.dpm_solver = dpm_solver
 
         # Use float64 for accuracy.
         betas = np.array(betas, dtype=np.float64)
@@ -516,19 +519,45 @@ class GaussianDiffusion:
         x_noisy = torch.cat((img[:, :-1,  ...], noise), dim=1)  #add noise as the last channel
         img=img.to(device)
 
-        for sample in self.p_sample_loop_progressive(
-            model,
-            shape,
-            noise=x_noisy,
-            clip_denoised=clip_denoised,
-            denoised_fn=denoised_fn,
-            cond_fn=cond_fn,
-            org=org,
-            model_kwargs=model_kwargs,
-            device=device,
-            progress=progress,
-        ):
-            final = sample
+        if self.dpm_solver:
+            final = {}
+            noise_schedule = NoiseScheduleVP(schedule='discrete', betas= th.from_numpy(self.betas))
+
+            model_fn = model_wrapper(
+                model,
+                noise_schedule,
+                model_type="noise",  # or "x_start" or "v" or "score"
+                model_kwargs=model_kwargs,
+            )
+
+            dpm_solver = DPM_Solver(model_fn, noise_schedule, algorithm_type="dpmsolver++",
+                            correcting_x0_fn="dynamic_thresholding", img = img[:, :-1,  ...])
+
+            ## Steps in [10, 20] can generate quite good samples.
+            sample, cal = dpm_solver.sample(
+                noise.to(dtype=th.float),
+                steps=20,
+                order=2,
+                skip_type="time_uniform",
+                method="multistep",
+            )
+            final["sample"] = sample
+            final["cal"] = cal
+        else:
+            print('thisis no dpm')
+            for sample in self.p_sample_loop_progressive(
+                model,
+                shape,
+                noise=x_noisy,
+                clip_denoised=clip_denoised,
+                denoised_fn=denoised_fn,
+                cond_fn=cond_fn,
+                org=org,
+                model_kwargs=model_kwargs,
+                device=device,
+                progress=progress,
+            ):
+                final = sample
             
         if dice_score(final["sample"][:,-1,:,:].unsqueeze(1), final["cal"]) < 0.65:
             cal_out = torch.clamp(final["cal"] + 0.25 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
