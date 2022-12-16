@@ -6,6 +6,7 @@ MedSegDiff is the first Diffusion Probabilistic Model (DPM) proposed for general
 - 22-11-30. This project is still quickly updating. Check TODO list to see what will be released next.
 - 22-12-03. BraTs2020 bugs fixed. Example case added.
 - 22-12-15. Fix multi-gpu distributed training.
+- 22-12-16. Now can use [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) for the fast sampling (1000 steps --> 20 steps) 🥳  Just set ``--dpm_solver True`` in the sampling stage. 
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
 1. Download ISIC dataset from https://challenge.isic-archive.com/data/. Your dataset folder under "data_dir" should be like:
@@ -101,7 +102,7 @@ Welcome to contribute to MedSegDiff. Any technique can improve the performance o
 
 - [x] Fix bugs in BRATS. Add BRATS example.
 - [ ] Release REFUGE and DDIT dataloaders and examples
-- [ ] Speed up sampling by DPM-solver
+- [x] Speed up sampling by DPM-solver
 - [ ] Inference of depth
 - [x] Fix bugs in Multi-GPU parallel
 - [ ] Sample and Vis in training
