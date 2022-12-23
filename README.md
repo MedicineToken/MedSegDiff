@@ -1,6 +1,6 @@
 
 
-# MedSegDiff: A Diffusion Probabilistic Model for Medical Image Segmentation
+# MedSegDiff: Medical Image Segmentation with Diffusion Model
 MedSegDiff is the first Diffusion Probabilistic Model (DPM) proposed for general Medical Image Segmentation. The algorithm is elaborated in our paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611).
 ## News
 - 22-11-30. This project is still quickly updating. Check TODO list to see what will be released next.
