@@ -1254,4 +1254,8 @@ def expand_dims(v, dims):
     Returns:
         a PyTorch tensor with shape [N, 1, 1, ..., 1] and the total dimension is `dims`.
     """
+<<<<<<< HEAD
     return v[(...,) + (None,)*(dims - 1)]
+=======
+    return v[(...,) + (None,)*(dims - 1)]
+>>>>>>> release

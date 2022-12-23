@@ -48,9 +48,8 @@ def staple(a):
     gap = 0.4
     if gap > 0.02:
         for i, s in enumerate(a):
-            print('s size is',s.size())
             r = s * mvres
-            res = r if i == 0 else torch.cat((res,r),0) 
+            res = r if i == 0 else torch.cat((res,r),0)
         nres = mv(res)
         gap = torch.mean(torch.abs(mvres - nres))
         mvres = nres
@@ -89,3 +88,7 @@ def export(tar, img_path=None):
         s = th.tensor(tar)[:,-1,:,:].unsqueeze(1)
         s = th.cat((s,s,s),1)
         vutils.save_image(s, fp = img_path)
+
+def norm(t):
+    m, s, v = torch.mean(t), torch.std(t), torch.var(t)
+    return (t - m) / s
