@@ -120,6 +120,9 @@ def main():
             co = th.tensor(cal_out)
             co = th.cat((co,co,co),1)
             enslist.append(co)
+
+            if args.debug:
+                compose = torch.cat((pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
         ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
         vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+".jpg", nrow = 1, padding = 10)
 
@@ -134,7 +137,8 @@ def create_argparser():
         model_path="",
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
-        out_dir='./results/'
+        out_dir='./results/',
+        debug = True
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
