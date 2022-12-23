@@ -7,6 +7,7 @@ MedSegDiff is the first Diffusion Probabilistic Model (DPM) proposed for general
 - 22-12-03. BraTs2020 bugs fixed. Example case added.
 - 22-12-15. Fix multi-gpu distributed training.
 - 22-12-16. DPM-Solver ✖️ MedSegDiff DONE 🥳 Now [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) is avaliable in MedsegDiff. Enjoy its lightning-fast sampling (1000 steps ❌ 20 steps ⭕️) by setting ``--dpm_solver True``. 
+- 22-12-23. Fixed some bugs of DPM-Solver.
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
 1. Download ISIC dataset from https://challenge.isic-archive.com/data/. Your dataset folder under "data_dir" should be like:
@@ -21,7 +22,7 @@ ISIC/
      
      ISBI2016_ISIC_Part3B_Training_GroundTruth.csv
     
-2. For training, run: ``python scripts/segmentation_train.py --data_dir input data direction --out_dir output data direction --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 32``
+2. For training, run: ``python scripts/segmentation_train.py --data_dir input data direction --out_dir output data direction --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 8``
     
 3. For sampling, run: ``python scripts/segmentation_sample.py --data_dir input data direction --out_dir output data direction --model_path saved model --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --num_ensemble 5``
 
@@ -50,7 +51,7 @@ data
 │       │  ...
 ~~~
     
-2. For training, run: ``python scripts/segmentation_train.py --data_dir (where you put data folder)/data/training --out_dir output data direction --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 32``
+2. For training, run: ``python scripts/segmentation_train.py --data_dir (where you put data folder)/data/training --out_dir output data direction --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 8``
 
 3. For sampling, run: ``python scripts/segmentation_sample.py --data_dir (where you put data folder)/data/testing --out_dir output data direction --model_path saved model --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --num_ensemble 5``
 
@@ -68,9 +69,17 @@ diffusion hyperparameters as:
 ~~~
 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False
 ~~~
+To speed up the sampling:
+~~~
+--diffusion_steps 50 --dpm_solver True 
+~~~
+run on multiple GPUs:
+~~~
+--multi-gpu 0,1,2 (for example)
+~~~
 training hyperparameters as:
 ~~~
---lr 5e-5 --batch_size 32
+--lr 5e-5 --batch_size 8
 ~~~
 and set ``--num_ensemble 5`` in sampling.
 
