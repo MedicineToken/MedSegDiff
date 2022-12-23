@@ -12,11 +12,11 @@ from . import dist_util, logger
 from .fp16_util import MixedPrecisionTrainer
 from .nn import update_ema
 from .resample import LossAwareSampler, UniformSampler
-from visdom import Visdom
-viz = Visdom(port=8850)
-loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='loss'))
-grad_window = viz.line(Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(),
-                           opts=dict(xlabel='step', ylabel='amplitude', title='gradient'))
+# from visdom import Visdom
+# viz = Visdom(port=8850)
+# loss_window = viz.line( Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(), opts=dict(xlabel='epoch', ylabel='Loss', title='loss'))
+# grad_window = viz.line(Y=th.zeros((1)).cpu(), X=th.zeros((1)).cpu(),
+#                            opts=dict(xlabel='step', ylabel='amplitude', title='gradient'))
 
 
 # For ImageNet experiments, this was a good default value.

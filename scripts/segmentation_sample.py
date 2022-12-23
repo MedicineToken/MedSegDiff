@@ -3,8 +3,8 @@
 import argparse
 import os
 import nibabel as nib
-from visdom import Visdom
-viz = Visdom(port=8850)
+# from visdom import Visdom
+# viz = Visdom(port=8850)
 import sys
 import random
 sys.path.append(".")
@@ -109,6 +109,7 @@ def main():
             sample, x_noisy, org, cal, cal_out = sample_fn(
                 model,
                 (args.batch_size, 3, args.image_size, args.image_size), img,
+                step = args.diffusion_steps,
                 clip_denoised=args.clip_denoised, 
                 model_kwargs=model_kwargs,
             )
@@ -117,14 +118,20 @@ def main():
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
  
-            co = th.tensor(cal_out)
-            co = th.cat((co,co,co),1)
+            co = cal_out.repeat(1, 3, 1, 1)
             enslist.append(co)
 
             if args.debug:
-                compose = torch.cat((pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
+                s = sample[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                o = org[:,:-1,:,:]
+                c = cal.repeat(1, 3, 1, 1)
+
+                tup = (o,s,c,co)
+
+                compose = th.cat(tup,0)
+                vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
         ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
-        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output'+".jpg", nrow = 1, padding = 10)
+        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output_ens'+".jpg", nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
@@ -138,7 +145,8 @@ def create_argparser():
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
         out_dir='./results/',
-        debug = True
+        multi_gpu = None, #"0,1,2"
+        debug = False
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
