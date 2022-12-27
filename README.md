@@ -108,7 +108,7 @@ Welcome to contribute to MedSegDiff. Any technique can improve the performance o
 - [ ] yaml configuration
 
 ## Thanks
-Code is copied a lot from [openai/improved-diffusion](https://github.com/openai/improved-diffusion), [WuJunde/ MrPrism](https://github.com/WuJunde/MrPrism), [WuJunde/ DiagnosisFirst](https://github.com/WuJunde/DiagnosisFirst), [LuChengTHU/dpm-solver](https://github.com/LuChengTHU/dpm-solver), [JuliaWolleb/Diffusion-based-Segmentation](https://github.com/JuliaWolleb/Diffusion-based-Segmentation), [hojonathanho/diffusion](https://github.com/hojonathanho/diffusion), [guided-diffusion](https://github.com/openai/guided-diffusion), [bigmb/Unet-Segmentation-Pytorch-Nest-of-Unets](https://github.com/bigmb/Unet-Segmentation-Pytorch-Nest-of-Unets), [nnUnet](https://github.com/MIC-DKFZ/nnUNet), [lucidrains/vit-pytorch](https://github.com/lucidrains/vit-pytorch)
+Code copied a lot from [openai/improved-diffusion](https://github.com/openai/improved-diffusion), [WuJunde/ MrPrism](https://github.com/WuJunde/MrPrism), [WuJunde/ DiagnosisFirst](https://github.com/WuJunde/DiagnosisFirst), [LuChengTHU/dpm-solver](https://github.com/LuChengTHU/dpm-solver), [JuliaWolleb/Diffusion-based-Segmentation](https://github.com/JuliaWolleb/Diffusion-based-Segmentation), [hojonathanho/diffusion](https://github.com/hojonathanho/diffusion), [guided-diffusion](https://github.com/openai/guided-diffusion), [bigmb/Unet-Segmentation-Pytorch-Nest-of-Unets](https://github.com/bigmb/Unet-Segmentation-Pytorch-Nest-of-Unets), [nnUnet](https://github.com/MIC-DKFZ/nnUNet), [lucidrains/vit-pytorch](https://github.com/lucidrains/vit-pytorch)
 ## Cite
 Please cite
 ~~~
