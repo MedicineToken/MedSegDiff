@@ -8,6 +8,10 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 22-12-15. Fix multi-gpu distributed training.
 - 22-12-16. DPM-Solver ✖️ MedSegDiff DONE 🥳 Now [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) is avaliable in MedsegDiff. Enjoy its lightning-fast sampling (1000 steps ❌ 20 steps ⭕️) by setting ``--dpm_solver True``. 
 - 22-12-23. Fixed some bugs of DPM-Solver.
+## Requirement
+     Python 3.8.0+
+
+     Pytorch 1.8.1+
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
 1. Download ISIC dataset from https://challenge.isic-archive.com/data/. Your dataset folder under "data_dir" should be like:
