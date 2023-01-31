@@ -8,6 +8,7 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 22-12-15. Fix multi-gpu distributed training.
 - 22-12-16. DPM-Solver ✖️ MedSegDiff DONE 🥳 Now [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) is avaliable in MedsegDiff. Enjoy its lightning-fast sampling (1000 steps ❌ 20 steps ⭕️) by setting ``--dpm_solver True``. 
 - 22-12-23. Fixed some bugs of DPM-Solver.
+- 22-01-31. MedSegDiff-V2 will be avaliable soon 🥳 
 ## Requirement
      Python 3.8.0+
 
