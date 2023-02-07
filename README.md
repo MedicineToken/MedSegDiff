@@ -9,6 +9,7 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 22-12-16. DPM-Solver ✖️ MedSegDiff DONE 🥳 Now [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) is avaliable in MedsegDiff. Enjoy its lightning-fast sampling (1000 steps ❌ 20 steps ⭕️) by setting ``--dpm_solver True``. 
 - 22-12-23. Fixed some bugs of DPM-Solver.
 - 22-01-31. MedSegDiff-V2 will be avaliable soon 🥳 . Check our paper [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/abs/2301.11798) first.
+- 22-02-07. Optimize workflow in BRATS sampling. Add dataloader for processing raw 3D BRATS data.
 ## Requirement
      Python 3.8.0+
 
