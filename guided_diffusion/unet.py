@@ -2006,6 +2006,8 @@ class Generic_UNet(SegmentationNetwork):
 
         self.conv_blocks_context = []
         self.conv_blocks_localization = []
+        self.conv_trans_blocks_a = []
+        self.conv_trans_blocks_b = []
         self.td = []
         self.tu = []
         self.ffparser = []
@@ -2029,6 +2031,9 @@ class Generic_UNet(SegmentationNetwork):
                                                               self.norm_op_kwargs, self.dropout_op,
                                                               self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
                                                               first_stride, basic_block=basic_block))
+            if d < num_pool -1:
+                self.conv_trans_blocks_a.append(conv_nd(2, int(d/2 + 1) * 128, 2 **(d+5), 1))
+                self.conv_trans_blocks_b.append(conv_nd(2, 2 **(d+5), 1, 1))
             if d != num_pool - 1:
                 self.ffparser.append(FFParser(output_features, 256 // (2 **(d+1)), 256 // (2 **(d+2))+1))
 
@@ -2125,6 +2130,8 @@ class Generic_UNet(SegmentationNetwork):
         # register all modules properly
         self.conv_blocks_localization = nn.ModuleList(self.conv_blocks_localization)
         self.conv_blocks_context = nn.ModuleList(self.conv_blocks_context)
+        self.conv_trans_blocks_a = nn.ModuleList(self.conv_trans_blocks_a)
+        self.conv_trans_blocks_b = nn.ModuleList(self.conv_trans_blocks_b)
         self.ffparser = nn.ModuleList(self.ffparser)
         self.td = nn.ModuleList(self.td)
         self.tu = nn.ModuleList(self.tu)
@@ -2148,9 +2155,9 @@ class Generic_UNet(SegmentationNetwork):
             if hs:
                 h = hs.pop(0)
                 ddims = h.size(1)
-                h = conv_nd(2, ddims, x.size(1), 1).to(device = x.device)(h)
+                h = self.conv_trans_blocks_a[d](h)
                 h = self.ffparser[d](h)
-                ha = conv_nd(2, x.size(1), 1, 1).to(device = x.device)(h)
+                ha = self.conv_trans_blocks_b[d](h)
                 hb = th.mean(h,(2,3))
                 hb = hb[:,:,None,None]
                 x = x * ha * hb
