@@ -14,7 +14,7 @@ import torch as th
 from PIL import Image
 import torch.distributed as dist
 from guided_diffusion import dist_util, logger
-from guided_diffusion.bratsloader import BRATSDataset
+from guided_diffusion.bratsloader import BRATSDataset, BRATSDataset3D
 from guided_diffusion.isicloader import ISICDataset
 import torchvision.utils as vutils
 from guided_diffusion.utils import staple
@@ -55,7 +55,7 @@ def main():
         tran_list = [transforms.Resize((args.image_size,args.image_size)),]
         transform_test = transforms.Compose(tran_list)
 
-        ds = BRATSDataset(args.data_dir,transform_test)
+        ds = BRATSDataset3D(args.data_dir,transform_test)
         args.in_ch = 5
     datal = th.utils.data.DataLoader(
         ds,
@@ -92,7 +92,10 @@ def main():
         b, m, path = next(data)  #should return an image from the dataloader "data"
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)     #add a noise channel$
-        slice_ID=path[0].split("_")[-1].split('.')[0]
+        if args.data_name == 'ISIC':
+            slice_ID=path[0].split("_")[-1].split('.')[0]
+        elif args.data_name == 'BRATS':
+            slice_ID=path[0].split("_")[2] + "_" + path[0].split("_")[4]
 
         logger.log("sampling...")
 
@@ -118,15 +121,28 @@ def main():
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
  
-            co = cal_out.repeat(1, 3, 1, 1)
+            co = th.tensor(cal_out).repeat(1, 3, 1, 1)
             enslist.append(co)
 
             if args.debug:
-                s = sample[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                o = org[:,:-1,:,:]
-                c = cal.repeat(1, 3, 1, 1)
+                # print('sample size is',sample.size())
+                # print('org size is',org.size())
+                # print('cal size is',cal.size())
+                if args.data_name == 'ISIC':
+                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o = th.tensor(org)[:,:-1,:,:]
+                    c = th.tensor(cal).repeat(1, 3, 1, 1)
+                elif args.data_name == 'BRATS':
+                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o1 = th.tensor(org)[:,0,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o2 = th.tensor(org)[:,1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o3 = th.tensor(org)[:,2,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o4 = th.tensor(org)[:,3,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    o5 = th.tensor(org)[:,4,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    c = th.tensor(cal).repeat(1, 3, 1, 1)
 
-                tup = (o,s,c,co)
+                tup = (o1,o2,o3,o4,m,s,c,co)
 
                 compose = th.cat(tup,0)
                 vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)

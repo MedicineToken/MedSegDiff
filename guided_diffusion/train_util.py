@@ -176,12 +176,12 @@ class TrainLoop:
 
 
             try:
-                    batch, cond = next(data_iter)
+                    batch, cond, name = next(data_iter)
             except StopIteration:
                     # StopIteration is thrown if dataset ends
                     # reinitialize data loader
                     data_iter = iter(self.dataloader)
-                    batch, cond = next(data_iter)
+                    batch, cond, name = next(data_iter)
 
             self.run_step(batch, cond)
 
