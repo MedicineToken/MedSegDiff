@@ -4,6 +4,7 @@ import numpy as np
 import os
 import os.path
 import nibabel
+import torchvision.utils as vutils
 
 
 class BRATSDataset(torch.utils.data.Dataset):
@@ -120,11 +121,14 @@ class BRATSDataset3D(torch.utils.data.Dataset):
         for seqtype in self.seqtypes:
             nib_img = nibabel.load(filedict[seqtype])
             path=filedict[seqtype]
-            out.append(torch.tensor(nib_img.get_fdata())[:,:,slice])
+            o = torch.tensor(nib_img.get_fdata())[:,:,slice]
+            if seqtype != 'seg':
+                o = o / o.max()
+            out.append(o)
         out = torch.stack(out)
         if self.test_flag:
             image=out
-            image = image[..., 8:-8, 8:-8]     #crop to a size of (224, 224)
+            # image = image[..., 8:-8, 8:-8]     #crop to a size of (224, 224)
             if self.transform:
                 image = self.transform(image)
             return (image, image, path)
@@ -132,8 +136,8 @@ class BRATSDataset3D(torch.utils.data.Dataset):
 
             image = out[:-1, ...]
             label = out[-1, ...][None, ...]
-            image = image[..., 8:-8, 8:-8]      #crop to a size of (224, 224)
-            label = label[..., 8:-8, 8:-8]
+            # image = image[..., 8:-8, 8:-8]      #crop to a size of (224, 224)
+            # label = label[..., 8:-8, 8:-8]
             label=torch.where(label > 0, 1, 0).float()  #merge all tumor classes into one
             if self.transform:
                 state = torch.get_rng_state()

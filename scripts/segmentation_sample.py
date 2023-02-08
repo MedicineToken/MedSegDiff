@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from ssl import OP_NO_TLSv1
 import nibabel as nib
 # from visdom import Visdom
 # viz = Visdom(port=8850)
@@ -60,7 +61,7 @@ def main():
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=1,
-        shuffle=False)
+        shuffle=True)
     data = iter(datal)
 
     logger.log("creating model and diffusion...")
@@ -121,7 +122,7 @@ def main():
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
  
-            co = th.tensor(cal_out).repeat(1, 3, 1, 1)
+            co = th.tensor(cal_out)
             enslist.append(co)
 
             if args.debug:
@@ -132,15 +133,15 @@ def main():
                     s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
                     o = th.tensor(org)[:,:-1,:,:]
                     c = th.tensor(cal).repeat(1, 3, 1, 1)
+                    co = co.repeat(1, 3, 1, 1)
                 elif args.data_name == 'BRATS':
-                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o1 = th.tensor(org)[:,0,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o2 = th.tensor(org)[:,1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o3 = th.tensor(org)[:,2,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o4 = th.tensor(org)[:,3,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o5 = th.tensor(org)[:,4,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    c = th.tensor(cal).repeat(1, 3, 1, 1)
+                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
+                    m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1)
+                    o1 = th.tensor(org)[:,0,:,:].unsqueeze(1)
+                    o2 = th.tensor(org)[:,1,:,:].unsqueeze(1)
+                    o3 = th.tensor(org)[:,2,:,:].unsqueeze(1)
+                    o4 = th.tensor(org)[:,3,:,:].unsqueeze(1)
+                    c = th.tensor(cal)
 
                 tup = (o1,o2,o3,o4,m,s,c,co)
 
