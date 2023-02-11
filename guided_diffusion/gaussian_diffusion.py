@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from torchvision.utils import save_image
 import torch
 import math
+import os
 # from visdom import Visdom
 # viz = Visdom(port=8850)
 import numpy as np
@@ -19,7 +20,11 @@ from .losses import normal_kl, discretized_gaussian_log_likelihood
 from scipy import ndimage
 from torchvision import transforms
 from .utils import staple, dice_score, norm
+import torchvision.utils as vutils
 from .dpm_solver import NoiseScheduleVP, model_wrapper, DPM_Solver
+import string
+import random
+
 def standardize(img):
     mean = th.mean(img)
     std = th.std(img)
@@ -549,7 +554,9 @@ class GaussianDiffusion:
             cal_out = torch.clamp(final["cal"] + 0.25 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
         else:
             print('no dpm-solver')
-            
+            i = 0
+            letters = string.ascii_lowercase
+            name = ''.join(random.choice(letters) for i in range(10)) 
             for sample in self.p_sample_loop_progressive(
                 model,
                 shape,
@@ -564,11 +571,25 @@ class GaussianDiffusion:
                 progress=progress,
             ):
                 final = sample
+                i += 1
+                '''vis each step sample'''
+                if i % 5 == 0:
+
+                    o1 = th.tensor(img)[:,0,:,:].unsqueeze(1)
+                    o2 = th.tensor(img)[:,1,:,:].unsqueeze(1)
+                    o3 = th.tensor(img)[:,2,:,:].unsqueeze(1)
+                    o4 = th.tensor(img)[:,3,:,:].unsqueeze(1)
+                    s = th.tensor(final["sample"])[:,-1,:,:].unsqueeze(1)
+                    tup = (o1/o1.max(),o2/o2.max(),o3/o3.max(),o4/o4.max(),s)
+                    compose = th.cat(tup,0)
+                    vutils.save_image(compose, fp = os.path.join('/home/users/wujunde/medsegdif/res_temp_norm_3000_100', name+str(i)+".jpg"), nrow = 1, padding = 10)
 
             if dice_score(final["sample"][:,-1,:,:].unsqueeze(1), final["cal"]) < 0.65:
                 cal_out = torch.clamp(final["cal"] + 0.25 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
             else:
                 cal_out = torch.clamp(final["cal"] * 0.5 + 0.5 * final["sample"][:,-1,:,:].unsqueeze(1), 0, 1)
+            
+
         return final["sample"], x_noisy, img, final["cal"], cal_out
 
     def p_sample_loop_progressive(
