@@ -122,8 +122,8 @@ class BRATSDataset3D(torch.utils.data.Dataset):
             nib_img = nibabel.load(filedict[seqtype])
             path=filedict[seqtype]
             o = torch.tensor(nib_img.get_fdata())[:,:,slice]
-            if seqtype != 'seg':
-                o = o / o.max()
+            # if seqtype != 'seg':
+            #     o = o / o.max()
             out.append(o)
         out = torch.stack(out)
         if self.test_flag:
@@ -131,7 +131,7 @@ class BRATSDataset3D(torch.utils.data.Dataset):
             # image = image[..., 8:-8, 8:-8]     #crop to a size of (224, 224)
             if self.transform:
                 image = self.transform(image)
-            return (image, image, path)
+            return (image, image, path.split('.nii')[0] + "_slice" + str(slice)+ ".nii") # virtual path
         else:
 
             image = out[:-1, ...]
@@ -144,7 +144,7 @@ class BRATSDataset3D(torch.utils.data.Dataset):
                 image = self.transform(image)
                 torch.set_rng_state(state)
                 label = self.transform(label)
-            return (image, label, path)
+            return (image, label, path.split('.nii')[0] + "_slice" + str(slice)+ ".nii") # virtual path
 
     def __len__(self):
         return len(self.database)

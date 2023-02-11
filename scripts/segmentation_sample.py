@@ -96,7 +96,8 @@ def main():
         if args.data_name == 'ISIC':
             slice_ID=path[0].split("_")[-1].split('.')[0]
         elif args.data_name == 'BRATS':
-            slice_ID=path[0].split("_")[2] + "_" + path[0].split("_")[4]
+            # slice_ID=path[0].split("_")[2] + "_" + path[0].split("_")[4]
+            slice_ID=path[0].split("_")[-3] + "_" + path[0].split("slice")[-1].split('.nii')[0]
 
         logger.log("sampling...")
 
@@ -143,7 +144,7 @@ def main():
                     o4 = th.tensor(org)[:,3,:,:].unsqueeze(1)
                     c = th.tensor(cal)
 
-                tup = (o1,o2,o3,o4,m,s,c,co)
+                tup = (o1/o1.max(),o2/o2.max(),o3/o3.max(),o4/o4.max(),m,s,c,co)
 
                 compose = th.cat(tup,0)
                 vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
