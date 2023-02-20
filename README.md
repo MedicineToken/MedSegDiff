@@ -137,3 +137,13 @@ Please cite
 }
 ~~~
 
+~~~
+@article{wu2023medsegdiff,
+  title={MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer},
+  author={Wu, Junde and Fu, Rao and Fang, Huihui and Zhang, Yu and Xu, Yanwu},
+  journal={arXiv preprint arXiv:2301.11798},
+  year={2023}
+}
+~~~
+
+
