@@ -21,7 +21,6 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 22-01-31. MedSegDiff-V2 will be avaliable soon 🥳 . Check our paper [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/abs/2301.11798) first.
 - 22-02-07. Optimize workflow in BRATS sampling. Add dataloader for processing raw 3D BRATS data.
 - 22-02-11. Fix bugs 3D BRATS data training bugs, [issue 31](https://github.com/WuJunde/MedSegDiff/issues/31).
-- 22-02-20. Add figures and gif in README.
 ## Requirement
      Python 3.8.0+
 
