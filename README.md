@@ -1,7 +1,17 @@
 
 
 # MedSegDiff: Medical Image Segmentation with Diffusion Model
-MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Image Segmentation. The algorithm is elaborated in our paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611).
+MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Image Segmentation. The algorithm is elaborated in our paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611) and [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/pdf/2301.11798.pdf).
+
+<img align="left" width="150" height="150" src="https://github.com/WuJunde/MedSegDiff/blob/master/medsegdiff_showcase.gif"> Diffusion Models work by destroying training data through the successive addition of Gaussian noise, and then learning to recover the data by reversing this noising process. After training, we can use the Diffusion Model to generate data by simply passing randomly sampled noise through the learned denoising process.In this paper, we extend this idea to medical image segmentation. We utilize the original image as a condition and generate a conditional segmentation map from random noise. We then perform ensembling on the segmentation maps obtained from multiple runs to obtain the final result. This approach better captures the uncertainty in medical images and outperforms previous methods on several benchmarks.
+
+
+## A Quick Overview 
+
+|<img align="left" width="450" height="200" src="https://github.com/WuJunde/MedSegDiff/blob/master/framework.png">|<img align="right" width="450" height="300" src="https://github.com/WuJunde/MedSegDiff/blob/master/frameworkv2.png">|
+|:--:|:--:| 
+| **MedSegDiff-V1** | **MedSegDiff-V2** |
+
 ## News
 - 22-11-30. This project is still quickly updating. Check TODO list to see what will be released next.
 - 22-12-03. BraTs2020 bugs fixed. Example case added.
