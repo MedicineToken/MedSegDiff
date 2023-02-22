@@ -8,7 +8,7 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 
 ## A Quick Overview 
 
-|<img align="left" width="480" height="190" src="https://github.com/WuJunde/MedSegDiff/blob/master/framework.png">|<img align="right" width="450" height="290" src="https://github.com/WuJunde/MedSegDiff/blob/master/frameworkv2.png">|
+|<img align="left" width="480" height="170" src="https://github.com/WuJunde/MedSegDiff/blob/master/framework.png">|<img align="right" width="450" height="270" src="https://github.com/WuJunde/MedSegDiff/blob/master/frameworkv2.png">|
 |:--:|:--:| 
 | **MedSegDiff-V1** | **MedSegDiff-V2** |
 
