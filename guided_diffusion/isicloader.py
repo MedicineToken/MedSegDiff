@@ -50,7 +50,5 @@ class ISICDataset(Dataset):
             torch.set_rng_state(state)
             mask = self.transform(mask)
 
-        if self.mode == 'Training':
-            return (img, mask)
-        else:
-            return (img, mask, name)
+
+        return (img, mask, name)

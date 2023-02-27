@@ -124,17 +124,31 @@ def main():
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
  
             co = th.tensor(cal_out)
-            enslist.append(co)
+            if args.version == 'v2':
+                enslist.append(sample[:,-1,:,:])
+            else:
+                enslist.append(co)
 
             if args.debug:
                 # print('sample size is',sample.size())
                 # print('org size is',org.size())
                 # print('cal size is',cal.size())
                 if args.data_name == 'ISIC':
-                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
+                    # s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
                     o = th.tensor(org)[:,:-1,:,:]
                     c = th.tensor(cal).repeat(1, 3, 1, 1)
                     co = co.repeat(1, 3, 1, 1)
+
+                    s = sample[:,-1,:,:]
+                    b,h,w = s.size()
+                    ss = s.clone()
+                    ss = ss.view(s.size(0), -1)
+                    ss -= ss.min(1, keepdim=True)[0]
+                    ss /= ss.max(1, keepdim=True)[0]
+                    ss = ss.view(b, h, w)
+                    ss = ss.unsqueeze(1).repeat(1, 3, 1, 1)
+
+                    tup = (ss,o,c,co)
                 elif args.data_name == 'BRATS':
                     s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
                     m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1)
@@ -144,12 +158,12 @@ def main():
                     o4 = th.tensor(org)[:,3,:,:].unsqueeze(1)
                     c = th.tensor(cal)
 
-                tup = (o1/o1.max(),o2/o2.max(),o3/o3.max(),o4/o4.max(),m,s,c,co)
+                    tup = (o1/o1.max(),o2/o2.max(),o3/o3.max(),o4/o4.max(),m,s,c,co)
 
                 compose = th.cat(tup,0)
-                vutils.save_image(compose, fp = args.out_dir +str(slice_ID)+'_output'+str(i)+".jpg", nrow = 1, padding = 10)
+                vutils.save_image(compose, fp = os.path.join(args.out_dir, str(slice_ID)+'_output'+str(i)+".jpg"), nrow = 1, padding = 10)
         ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
-        vutils.save_image(ensres, fp = args.out_dir +str(slice_ID)+'_output_ens'+".jpg", nrow = 1, padding = 10)
+        vutils.save_image(ensres, fp = os.path.join(args.out_dir, str(slice_ID)+'_output_ens'+".jpg"), nrow = 1, padding = 10)
 
 def create_argparser():
     defaults = dict(
@@ -164,7 +178,8 @@ def create_argparser():
         gpu_dev = "0",
         out_dir='./results/',
         multi_gpu = None, #"0,1,2"
-        debug = False
+        debug = False,
+        version = 'v1'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

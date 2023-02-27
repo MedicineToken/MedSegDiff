@@ -98,7 +98,8 @@ def create_argparser():
         fp16_scale_growth=1e-3,
         gpu_dev = "0",
         multi_gpu = None, #"0,1,2"
-        out_dir='./results/'
+        out_dir='./results/',
+        version = 'v1'
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
