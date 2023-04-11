@@ -55,7 +55,7 @@ def main():
         model.to(device = th.device('cuda', int(args.gpu_dev)))
     else:
         model.to(dist_util.dev())
-    schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
+    schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=args.diffusion_steps)
 
 
     logger.log("training...")

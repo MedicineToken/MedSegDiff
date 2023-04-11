@@ -49,7 +49,7 @@ def staple(a):
     if gap > 0.02:
         for i, s in enumerate(a):
             r = s * mvres
-            res = r if i == 0 else torch.cat((res,r),0) 
+            res = r if i == 0 else torch.cat((res,r),0)
         nres = mv(res)
         gap = torch.mean(torch.abs(mvres - nres))
         mvres = nres

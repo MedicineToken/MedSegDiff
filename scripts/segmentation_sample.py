@@ -115,14 +115,14 @@ def main():
                 model,
                 (args.batch_size, 3, args.image_size, args.image_size), img,
                 step = args.diffusion_steps,
-                clip_denoised=args.clip_denoised, 
+                clip_denoised=args.clip_denoised,
                 model_kwargs=model_kwargs,
             )
 
             end.record()
             th.cuda.synchronize()
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
- 
+
             co = th.tensor(cal_out)
             if args.version == 'new':
                 enslist.append(sample[:,-1,:,:])
