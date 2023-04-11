@@ -14,6 +14,7 @@ import os
 # viz = Visdom(port=8850)
 import numpy as np
 import torch as th
+import torch.nn as nn
 from .train_util import visualize
 from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
@@ -107,6 +108,7 @@ class LossType(enum.Enum):
     )  # use raw MSE loss (with RESCALED_KL when learning variances)
     KL = enum.auto()  # use the variational lower-bound
     RESCALED_KL = enum.auto()  # like KL, but rescale to estimate the full VLB
+    BCE_DICE = enum.auto()
 
     def is_vb(self):
         return self == LossType.KL or self == LossType.RESCALED_KL
@@ -996,7 +998,7 @@ class GaussianDiffusion:
         terms = {}
 
 
-        if self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
+        if self.loss_type == LossType.MSE or self.loss_type == LossType.BCE_DICE or self.loss_type == LossType.RESCALED_MSE:
 
             model_output, cal = model(x_t, self._scale_timesteps(t), **model_kwargs)
             if self.model_var_type in [
@@ -1031,13 +1033,15 @@ class GaussianDiffusion:
             }[self.model_mean_type]
 
             # model_output = (cal > 0.5) * (model_output >0.5) * model_output if 2. * (cal*model_output).sum() / (cal+model_output).sum() < 0.75 else model_output
-            terms["mse_diff"] = mean_flat((target - model_output) ** 2 )
+            # terms["loss_diff"] = nn.BCELoss(model_output, target)
+            terms["loss_diff"] = mean_flat((target - model_output) ** 2 )
             terms["loss_cal"] = mean_flat((res - cal) ** 2)
+            # terms["loss_cal"] = nn.BCELoss()(cal.type(th.float), res.type(th.float)) 
             # terms["mse"] = (terms["mse_diff"] + terms["mse_cal"]) / 2.
             if "vb" in terms:
-                terms["loss"] = terms["mse_diff"] + terms["vb"]
+                terms["loss"] = terms["loss_diff"] + terms["vb"]
             else:
-                terms["loss"] = terms["mse_diff"] 
+                terms["loss"] = terms["loss_diff"] 
 
         else:
             raise NotImplementedError(self.loss_type)

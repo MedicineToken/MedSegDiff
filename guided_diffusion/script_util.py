@@ -3,7 +3,7 @@ import inspect
 
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
-from .unet import SuperResModel, UNetModel_v2preview, UNetModel_v1preview, EncoderUNetModel
+from .unet import SuperResModel, UNetModel_newpreview, UNetModel_v1preview, EncoderUNetModel
 
 NUM_CLASSES = 2
 
@@ -62,7 +62,7 @@ def model_and_diffusion_defaults():
         use_fp16=False,
         use_new_attention_order=False,
         dpm_solver = False,
-        version = 'v1',
+        version = 'new',
     )
     res.update(diffusion_defaults())
     return res
@@ -154,7 +154,7 @@ def create_model(
     resblock_updown=False,
     use_fp16=False,
     use_new_attention_order=False,
-    version = "v1",
+    version = 'new',
 ):
     if channel_mult == "":
         if image_size == 512:
@@ -173,8 +173,13 @@ def create_model(
     attention_ds = []
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
+    
+    if version == 'new':
+        print("runing new version")
+    else:
+        print('runing old version')
 
-    return UNetModel_v2preview(
+    return UNetModel_newpreview(
         image_size=image_size,
         in_channels=in_ch,
         model_channels=num_channels,
@@ -192,7 +197,7 @@ def create_model(
         use_scale_shift_norm=use_scale_shift_norm,
         resblock_updown=resblock_updown,
         use_new_attention_order=use_new_attention_order,
-    ) if version == 'v2' else UNetModel_v1preview(
+    ) if version == 'new' else UNetModel_v1preview(
         image_size=image_size,
         in_channels=in_ch,
         model_channels=num_channels,

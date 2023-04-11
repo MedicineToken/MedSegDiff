@@ -132,59 +132,65 @@ def eval_seg(pred,true_mask_p,threshold = (0.1, 0.3, 0.5, 0.7, 0.9)):
             
         return eiou / len(threshold), edice / len(threshold)
 
-# def main():
-#     mix_res = (0,0)
-#     pred_path = '/home/users/wujunde/medsegdif/res-nnmerge-v2-isic'
-#     gt_path = '/home/users/wujunde/dataset/ISIC/ISBI2016_ISIC_Part3B_Test_Data'
-#     for root, dirs, files in os.walk(pred_path, topdown=False):
-#         for name in files:
-#             if 'ens' in name:
-#                 ind = name.split('_')[0]
-#                 pred = Image.open(os.path.join(root, name)).convert('L')
-#                 gt_name = "ISIC_" + ind + "_Segmentation.png"
-#                 gt = Image.open(os.path.join(gt_path, gt_name)).convert('L')
-#                 pred = torchvision.transforms.PILToTensor()(pred)
-#                 pred = torch.unsqueeze(pred,0)
-#                 gt = torchvision.transforms.PILToTensor()(gt)
-#                 gt = torchvision.transforms.Resize((256,256))(gt)
-#                 gt = torch.unsqueeze(gt,0)
-#                 temp = eval_seg(pred, gt)
-#                 mix_res = tuple([sum(a) for a in zip(mix_res, temp)])
-#     iou, dice = tuple([a/381.0 for a in mix_res])
-#     print('iou is',iou)
-#     print('dice is', dice)
-
 def main():
     mix_res = (0,0)
-    pred_path = '/home/users/wujunde/medsegdif/res-nnmerge-v2-isic'
-    gt_path = '/home/users/wujunde/dataset/ISIC/ISBI2016_ISIC_Part3B_Test_Data'
-    enlist = []
+    pred_path = '/home/wujunde/results/medsegdiff/20230330_isic_v2preview/samples'
+    gt_path = '/home/data/isic/isic2016/ISBI2016_ISIC_Part1_Test_GroundTruth'
     for root, dirs, files in os.walk(pred_path, topdown=False):
         for name in files:
             if 'ens' in name:
                 ind = name.split('_')[0]
-                for slice in ['0', '1', '2', '3', '4']:
-                    name = ind + "_output" + slice + '.jpg' 
-                    pred = Image.open(os.path.join(root, name)).convert('L')
-                    gt_name = "ISIC_" + ind + "_Segmentation.png"
-                    gt = Image.open(os.path.join(gt_path, gt_name)).convert('L')
-                    pred = torchvision.transforms.PILToTensor()(pred)
-                    pred = torch.unsqueeze(pred,0)[:,:,10:266,10:266].float() / 255
-                    enlist.append(pred)
-
-                pred = staple(th.stack(enlist,dim=0)).squeeze(0)
-                vutils.save_image(pred, fp = os.path.join('/home/users/wujunde/medsegdif/results/' + str(ind)+'.jpg'), nrow = 1, padding = 10)
+                pred = Image.open(os.path.join(root, name)).convert('L')
+                gt_name = "ISIC_" + ind + "_Segmentation.png"
+                gt = Image.open(os.path.join(gt_path, gt_name)).convert('L')
+                pred = torchvision.transforms.PILToTensor()(pred)
+                pred = torch.unsqueeze(pred,0).float() 
+                pred = pred / pred.max()
+                print('pred max is', pred.max())
+                vutils.save_image(pred, fp = os.path.join('./results/' + str(ind)+'pred.jpg'), nrow = 1, padding = 10)
                 gt = torchvision.transforms.PILToTensor()(gt)
                 gt = torchvision.transforms.Resize((256,256))(gt)
-                gt = torch.unsqueeze(gt,0).float() / 255
-                temp = eval_seg(pred, gt)
+                gt = torch.unsqueeze(gt,0).float() / 255.0
+                vutils.save_image(gt, fp = os.path.join('./results/' + str(ind)+'gt.jpg'), nrow = 1, padding = 10)
+                temp = eval_seg(pred, gt, threshold= (0.1, 0.09))
+                print('ind ', ind)
+                print('temp \n', temp)
                 mix_res = tuple([sum(a) for a in zip(mix_res, temp)])
-                enlist = []
-
-
     iou, dice = tuple([a/381.0 for a in mix_res])
     print('iou is',iou)
     print('dice is', dice)
+
+# def main():
+#     mix_res = (0,0)
+#     pred_path = '/home/wujunde/results/medsegdiff/20230330_isic_v2preview/samples'
+#     gt_path = '/home/data/isic/isic2016/ISBI2016_ISIC_Part1_Test_GroundTruth'
+#     enlist = []
+#     for root, dirs, files in os.walk(pred_path, topdown=False):
+#         for name in files:
+#             if 'ens' in name:
+#                 ind = name.split('_')[0]
+#                 for slice in ['0', '1', '2', '3', '4']:
+#                     name = ind + "_output" + slice + '.jpg' 
+#                     pred = Image.open(os.path.join(root, name)).convert('L')
+#                     gt_name = "ISIC_" + ind + "_Segmentation.png"
+#                     gt = Image.open(os.path.join(gt_path, gt_name)).convert('L')
+#                     pred = torchvision.transforms.PILToTensor()(pred)
+#                     pred = torch.unsqueeze(pred,0)[:,:,10:266,10:266].float() / 255
+#                     enlist.append(pred)
+
+#                 pred = staple(th.stack(enlist,dim=0)).squeeze(0)
+#                 vutils.save_image(pred, fp = os.path.join('/home/users/wujunde/medsegdif/results/' + str(ind)+'.jpg'), nrow = 1, padding = 10)
+#                 gt = torchvision.transforms.PILToTensor()(gt)
+#                 gt = torchvision.transforms.Resize((256,256))(gt)
+#                 gt = torch.unsqueeze(gt,0).float() / 255
+#                 temp = eval_seg(pred, gt)
+#                 mix_res = tuple([sum(a) for a in zip(mix_res, temp)])
+#                 enlist = []
+
+
+#     iou, dice = tuple([a/381.0 for a in mix_res])
+#     print('iou is',iou)
+#     print('dice is', dice)
 
 if __name__ == "__main__":
     main()

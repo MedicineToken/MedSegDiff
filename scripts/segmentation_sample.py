@@ -60,7 +60,7 @@ def main():
         args.in_ch = 5
     datal = th.utils.data.DataLoader(
         ds,
-        batch_size=1,
+        batch_size=args.batch_size,
         shuffle=True)
     data = iter(datal)
 
@@ -89,7 +89,7 @@ def main():
     if args.use_fp16:
         model.convert_to_fp16()
     model.eval()
-    while len(all_images) * args.batch_size < args.num_samples:
+    for _ in range(len(data)):
         b, m, path = next(data)  #should return an image from the dataloader "data"
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)     #add a noise channel$
@@ -124,7 +124,7 @@ def main():
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
  
             co = th.tensor(cal_out)
-            if args.version == 'v2':
+            if args.version == 'new':
                 enslist.append(sample[:,-1,:,:])
             else:
                 enslist.append(co)
@@ -137,7 +137,7 @@ def main():
                     # s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
                     o = th.tensor(org)[:,:-1,:,:]
                     c = th.tensor(cal).repeat(1, 3, 1, 1)
-                    co = co.repeat(1, 3, 1, 1)
+                    # co = co.repeat(1, 3, 1, 1)
 
                     s = sample[:,-1,:,:]
                     b,h,w = s.size()
@@ -148,7 +148,7 @@ def main():
                     ss = ss.view(b, h, w)
                     ss = ss.unsqueeze(1).repeat(1, 3, 1, 1)
 
-                    tup = (ss,o,c,co)
+                    tup = (ss,o,c)
                 elif args.data_name == 'BRATS':
                     s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
                     m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1)
@@ -173,13 +173,12 @@ def create_argparser():
         num_samples=1,
         batch_size=1,
         use_ddim=False,
-        model_path="",
+        model_path="",         #path to pretrain model
         num_ensemble=5,      #number of samples in the ensemble
         gpu_dev = "0",
         out_dir='./results/',
         multi_gpu = None, #"0,1,2"
-        debug = False,
-        version = 'v1'
+        debug = False
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()

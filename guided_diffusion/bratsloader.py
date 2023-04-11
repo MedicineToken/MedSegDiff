@@ -146,7 +146,5 @@ class BRATSDataset3D(torch.utils.data.Dataset):
                 label = self.transform(label)
             return (image, label, path.split('.nii')[0] + "_slice" + str(slice)+ ".nii") # virtual path
 
-    def __len__(self):
-        return len(self.database)
 
 

@@ -18,8 +18,8 @@ class ISICDataset(Dataset):
 
 
         df = pd.read_csv(os.path.join(data_path, 'ISBI2016_ISIC_Part3B_' + mode + '_GroundTruth.csv'), encoding='gbk')
-        self.name_list = df.iloc[:,0].tolist()
-        self.label_list = df.iloc[:,1].tolist()
+        self.name_list = df.iloc[:,1].tolist()
+        self.label_list = df.iloc[:,2].tolist()
         self.data_path = data_path
         self.mode = mode
 
@@ -30,19 +30,19 @@ class ISICDataset(Dataset):
 
     def __getitem__(self, index):
         """Get the images"""
-        name = self.name_list[index]+'.jpg'
-        img_path = os.path.join(self.data_path, 'ISBI2016_ISIC_Part3B_'+ self.mode +'_Data',name)
+        name = self.name_list[index]
+        img_path = os.path.join(self.data_path, name)
         
-        mask_name = name.split('.')[0] + '_Segmentation.png'
-        msk_path = os.path.join(self.data_path, 'ISBI2016_ISIC_Part3B_'+ self.mode +'_Data',mask_name)
+        mask_name = self.label_list[index]
+        msk_path = os.path.join(self.data_path, mask_name)
 
         img = Image.open(img_path).convert('RGB')
         mask = Image.open(msk_path).convert('L')
 
-        if self.mode == 'Training':
-            label = 0 if self.label_list[index] == 'benign' else 1
-        else:
-            label = int(self.label_list[index])
+        # if self.mode == 'Training':
+        #     label = 0 if self.label_list[index] == 'benign' else 1
+        # else:
+        #     label = int(self.label_list[index])
 
         if self.transform:
             state = torch.get_rng_state()
