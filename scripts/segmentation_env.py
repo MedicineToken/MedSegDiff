@@ -140,8 +140,8 @@ def main():
     args = argParser.parse_args()
     mix_res = (0,0)
     num = 0
-    pred_path = args.inp_pth #'/home/wujunde/results/medsegdiff/20230330_isic_v2preview/samples'
-    gt_path = args.out_pth # '/home/data/isic/isic2016/ISBI2016_ISIC_Part1_Test_GroundTruth'
+    pred_path = args.inp_pth
+    gt_path = args.out_pth
     for root, dirs, files in os.walk(pred_path, topdown=False):
         for name in files:
             if 'ens' in name:
