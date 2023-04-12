@@ -23,9 +23,11 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 23-02-11. Fix bugs 3D BRATS data training bugs, [issue 31](https://github.com/WuJunde/MedSegDiff/issues/31).
 - 23-03-04. Paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611) has been officially accepted by MIDL 2023 🥳
 - 23-04-11. A new version based on the v2 framework has been released 🥳. It's more accurate, stable, and domain-adaptable than the previous version, while still not hogging too much of your resources. We've also fixed up a bunch of small things, like the requirement.txt and isic csv files. Huge thanks to all of you who reported issues, you really helped us a lot 🤗. btw, it will run the new version by default. Add "--version 1" if you want run the previous version. 
+- 23-04-12. Added a simple evaluation file for isic dataset (script/segmentation_env). Usage: ``python scripts/segmentation_env --inp_pth *folder you save prediction images* --out_pth *folder you save ground truth images*``
+
 ## Requirement
 
-pip install -r requirement.txt
+``pip install -r requirement.txt``
 
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
@@ -44,6 +46,8 @@ ISIC/
 2. For training, run: ``python scripts/segmentation_train.py --data_name ISIC --data_dir input data direction --out_dir output data direction --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --lr 1e-4 --batch_size 8``
     
 3. For sampling, run: ``python scripts/segmentation_sample.py --data_name ISIC --data_dir input data direction --out_dir output data direction --model_path saved model --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --num_ensemble 5``
+
+4. For evaluation, run ``python scripts/segmentation_env --inp_pth *folder you save prediction images* --out_pth *folder you save ground truth images*``
 
 
 In default, the samples will be saved at `` ./results/`` 
