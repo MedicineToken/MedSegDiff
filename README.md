@@ -18,14 +18,15 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 22-12-15. Fix multi-gpu distributed training.
 - 22-12-16. DPM-Solver ✖️ MedSegDiff DONE 🥳 Now [DPM-Solver](https://github.com/LuChengTHU/dpm-solver) is avaliable in MedsegDiff. Enjoy its lightning-fast sampling (1000 steps ❌ 20 steps ⭕️) by setting ``--dpm_solver True``. 
 - 22-12-23. Fixed some bugs of DPM-Solver.
-- 22-01-31. MedSegDiff-V2 will be avaliable soon 🥳 . Check our paper [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/abs/2301.11798) first.
-- 22-02-07. Optimize workflow in BRATS sampling. Add dataloader for processing raw 3D BRATS data.
-- 22-02-11. Fix bugs 3D BRATS data training bugs, [issue 31](https://github.com/WuJunde/MedSegDiff/issues/31).
-- 22-03-04. Paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611) has been officially accepted by MIDL 2023 🥳
+- 23-01-31. MedSegDiff-V2 will be avaliable soon 🥳 . Check our paper [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/abs/2301.11798) first.
+- 23-02-07. Optimize workflow in BRATS sampling. Add dataloader for processing raw 3D BRATS data.
+- 23-02-11. Fix bugs 3D BRATS data training bugs, [issue 31](https://github.com/WuJunde/MedSegDiff/issues/31).
+- 23-03-04. Paper [MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model](https://arxiv.org/abs/2211.00611) has been officially accepted by MIDL 2023 🥳
+- 23-04-11. A new version based on the v2 framework has been released 🥳. It's more accurate, stable, and domain-adaptable than the previous version, while still not hogging too much of your resources. We've also fixed up a bunch of small things, like the requirement.txt and isic csv files. Huge thanks to all of you who reported issues, you really helped us a lot 🤗. btw, it will run the new version by default. Add "--version 1" if you want run the previous version. 
 ## Requirement
-     Python 3.8.0+
 
-     Pytorch 1.8.1+
+pip install -r requirement.txt
+
 ## Example Cases
 ### Melanoma Segmentation from Skin Images
 1. Download ISIC dataset from https://challenge.isic-archive.com/data/. Your dataset folder under "data_dir" should be like:
