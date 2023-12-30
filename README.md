@@ -13,6 +13,7 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 | **MedSegDiff-V1** | **MedSegDiff-V2** |
 
 ## News
+- [TOP] Join in our [Discord](https://discord.gg/EqbgSPEX) to ask questions and discuss with others.
 - 22-11-30. This project is still quickly updating. Check TODO list to see what will be released next.
 - 22-12-03. BraTs2020 bugs fixed. Example case added.
 - 22-12-15. Fix multi-gpu distributed training.
