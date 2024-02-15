@@ -154,7 +154,7 @@ Please cite
 }
 ~~~
 
-## Buy Me A Coffe 🥤😉
+## Buy Me A Coffee 🥤😉
 https://ko-fi.com/jundewu
 
 
