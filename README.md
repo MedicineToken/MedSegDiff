@@ -59,19 +59,16 @@ In default, the samples will be saved at `` ./results/``
 data
 └───training
 │   └───slice0001
-│       │   t1.nii.gz
-│       │   t2.nii.gz
-│       │   flair.nii.gz
-│       │   t1ce.nii.gz
-│       │   seg.nii.gz
+│       │   brats_train_001_t1_123_w.nii.gz
+│       │   brats_train_001_t2_123_w.nii.gz
+│       │   brats_train_001_flair_123_w.nii.gz
+│       │   brats_train_001_t1ce_123_w.nii.gz
+│       │   brats_train_001_seg_123_w.nii.gz
 │   └───slice0002
 │       │  ...
 └───testing
 │   └───slice1000
-│       │   t1.nii.gz
-│       │   t2.nii.gz
-│       │   flair.nii.gz
-│       │   t1ce.nii.gz
+│       │  ...
 │   └───slice1001
 │       │  ...
 ~~~
