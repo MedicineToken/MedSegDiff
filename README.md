@@ -134,18 +134,18 @@ Code copied a lot from [openai/improved-diffusion](https://github.com/openai/imp
 ## Cite
 Please cite
 ~~~
-@article{wu2022medsegdiff,
+@inproceedings{wu2023medsegdiff,
   title={MedSegDiff: Medical Image Segmentation with Diffusion Probabilistic Model},
-  author={Wu, Junde and Fang, Huihui and Zhang, Yu and Yang, Yehui and Xu, Yanwu},
-  journal={arXiv preprint arXiv:2211.00611},
-  year={2022}
+  author={Wu, Junde and FU, RAO and Fang, Huihui and Zhang, Yu and Yang, Yehui and Xiong, Haoyi and Liu, Huiying and Xu, Yanwu},
+  booktitle={Medical Imaging with Deep Learning},
+  year={2023}
 }
 ~~~
 
 ~~~
 @article{wu2023medsegdiff,
   title={MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer},
-  author={Wu, Junde and Fu, Rao and Fang, Huihui and Zhang, Yu and Xu, Yanwu},
+  author={Wu, Junde and Ji, Wei and Fu, Huazhu and Xu, Min and Jin, Yueming and Xu, Yanwu}
   journal={arXiv preprint arXiv:2301.11798},
   year={2023}
 }
