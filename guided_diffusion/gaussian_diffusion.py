@@ -549,6 +549,7 @@ class GaussianDiffusion:
                 skip_type="time_uniform",
                 method="multistep",
             )
+            sample = sample.detach()    ### MODIFIED: for DPM-Solver OOM issue
             sample[:,-1,:,:] = norm(sample[:,-1,:,:])
             final["sample"] = sample
             final["cal"] = cal
