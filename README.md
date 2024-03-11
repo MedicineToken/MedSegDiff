@@ -78,7 +78,7 @@ data
 3. For sampling, run: ``python scripts/segmentation_sample.py --data_dir (where you put data folder)/data/testing --out_dir output data direction --model_path saved model --image_size 256 --num_channels 128 --class_cond False --num_res_blocks 2 --num_heads 1 --learn_sigma True --use_scale_shift_norm False --attention_resolutions 16 --diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False --num_ensemble 5``
 
 
-### Ohter Examples
+### Other Examples
 ...
 ### Run on  your own dataset
 It is simple to run MedSegDiff on the other datasets. Just write another data loader file following `` ./guided_diffusion/isicloader.py`` or `` ./guided_diffusion/bratsloader.py``.  Welcome to open issues if you meet any problem. It would be appreciated if you could contribute your dataset extensions. Unlike natural images, medical images vary a lot depending on different tasks. Expanding the generalization of a method requires everyone's efforts.
