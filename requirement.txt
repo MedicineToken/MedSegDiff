@@ -1,5 +1,4 @@
-python>=3.6
-pytorch>=1.8
+torch>=1.8
 numpy
 pandas
 blobfile
