@@ -23,8 +23,8 @@ class CustomDataset(Dataset):
         images = sorted(glob(os.path.join(path, "images/*.png")))
         masks = sorted(glob(os.path.join(path, "masks/*.png")))
 
-        self.name_list = images[:2]
-        self.label_list = masks[:2]
+        self.name_list = images
+        self.label_list = masks
         self.data_path = path
         self.mode = mode
 
@@ -44,10 +44,10 @@ class CustomDataset(Dataset):
         img = Image.open(img_path).convert('RGB')
         mask = Image.open(msk_path).convert('L')
 
-        if self.mode == 'Training':
-            label = 0 if self.label_list[index] == 'benign' else 1
-        else:
-            label = int(self.label_list[index])
+        # if self.mode == 'Training':
+        #     label = 0 if self.label_list[index] == 'benign' else 1
+        # else:
+        #     label = int(self.label_list[index])
 
         if self.transform:
             state = torch.get_rng_state()
@@ -55,7 +55,8 @@ class CustomDataset(Dataset):
             torch.set_rng_state(state)
             mask = self.transform(mask)
 
-        if self.mode == 'Training':
-            return (img, mask, name)
-        else:
-            return (img, mask, name)
+        return (img, mask, name)
+        # if self.mode == 'Training':
+        #     return (img, mask, name)
+        # else:
+        #     return (img, mask, name)

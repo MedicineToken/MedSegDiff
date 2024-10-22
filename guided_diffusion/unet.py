@@ -735,6 +735,17 @@ class UNetModel_v1preview(nn.Module):
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
     
+    def load_part_state_dict(self, state_dict):
+
+        own_state = self.state_dict()
+        for name, param in state_dict.items():
+            if name not in own_state:
+                    continue
+            if isinstance(param, th.nn.Parameter):
+                # backwards compatibility for serialized parameters
+                param = param.data
+            own_state[name].copy_(param)
+
     def enhance(self, c, h):
         cu = layer_norm(c.size()[1:])(c)
         hu = layer_norm(h.size()[1:])(h)
