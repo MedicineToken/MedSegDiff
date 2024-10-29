@@ -26,6 +26,7 @@ MedSegDiff a Diffusion Probabilistic Model (DPM) based framework for Medical Ima
 - 23-04-11. A new version based on the v2 framework has been released 🥳. It's more accurate, stable, and domain-adaptable than the previous version, while still not hogging too much of your resources. We've also fixed up a bunch of small things, like the requirement.txt and isic csv files. Huge thanks to all of you who reported issues, you really helped us a lot 🤗. btw, it will run the new version by default. Add "--version 1" if you want run the previous version. 
 - 23-04-12. Added a simple evaluation file for isic dataset (script/segmentation_env). Usage: ``python scripts/segmentation_env.py --inp_pth *folder you save prediction images* --out_pth *folder you save ground truth images*``
 - 23-12-05. Paper [MedSegDiff-V2: Diffusion based Medical Image Segmentation with Transformer](https://arxiv.org/abs/2301.11798) has been officially accepted by AAAI 2024 🥳
+- 24-10-29. MedSegDiff-V2 has been selected as AAAI-24 Most Influential Paper 🥳
 
 ## Requirement
 
